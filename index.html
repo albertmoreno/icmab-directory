@@ -383,7 +383,7 @@
             position: fixed;
             bottom: 90px;
             right: 20px;
-            z-index: 1000;
+            z-index: 999;
             background: #0345bf;
             color: white;
             border: none;
@@ -649,7 +649,7 @@
         </div>
 
         <!-- Botón de instalación PWA móvil (debajo del QR) -->
-        <button v-if="mobilePWAButton" class="mobile-pwa-button" @click="installPWA" title="Instalar com a aplicació">
+        <button v-if="isMobile && !isPWAInstalled" class="mobile-pwa-button" @click="installPWA" title="Instalar com a aplicació">
             <i class="bi bi-download"></i>Instalar app
         </button>
 
@@ -872,8 +872,8 @@
                 // PWA Installation
                 let deferredPrompt;
                 const installButton = ref(false);
-                const mobilePWAButton = ref(false);
                 const isMobile = ref(false);
+                const isPWAInstalled = ref(false);
 
                 const installPWA = () => {
                     console.log('Intentando instalar PWA...');
@@ -881,15 +881,16 @@
                         deferredPrompt.prompt();
                         deferredPrompt.userChoice.then((choiceResult) => {
                             if (choiceResult.outcome === 'accepted') {
-                                console.log('PWA instalada correctamente');
-                                installButton.value = false; // Ocultar botón después de instalar
+                                console.log('PWA instal·lada correctament');
+                                installButton.value = false;
+                                isPWAInstalled.value = true;
                             } else {
-                                console.log('Instalación cancelada por el usuario');
+                                console.log('Instal·lació cancel·lada per l\'usuari');
                             }
                             deferredPrompt = null;
                         });
                     } else {
-                        console.log('No hay prompt de instalación disponible');
+                        console.log('No hi ha prompt d\'instal·lació disponible');
                     }
                 };
 
@@ -909,10 +910,10 @@
                     if ('serviceWorker' in navigator) {
                         navigator.serviceWorker.register('/sw.js')
                             .then((registration) => {
-                                console.log('✅ Service Worker registrado:', registration);
+                                console.log('✅ Service Worker registrat:', registration);
                             })
                             .catch((error) => {
-                                console.error('❌ Error registrando Service Worker:', error);
+                                console.error('❌ Error registrant Service Worker:', error);
                             });
                     }
 
@@ -924,33 +925,11 @@
                         console.log('PWA instalable detectada - banner automático suprimido');
                         
                         // Mostrar el botón apropiado según el dispositivo
-                        if (isMobile.value) {
-                            mobilePWAButton.value = true;
-                            console.log('Botón PWA móvil activado');
-                        } else {
+                        if (!isMobile.value) {
                             installButton.value = true;
                             console.log('Botón PWA desktop activado');
                         }
                     });
-
-                    // Verificación manual para mostrar el botón (fallback)
-                    setTimeout(() => {
-                        console.log('Verificación manual de PWA...');
-                        console.log('DeferredPrompt disponible:', !!deferredPrompt);
-                        console.log('Es móvil:', isMobile.value);
-                        console.log('Display mode:', window.matchMedia('(display-mode: standalone)').matches);
-                        
-                        // Si no está en modo standalone y tenemos deferredPrompt, mostrar botón apropiado
-                        if (!window.matchMedia('(display-mode: standalone)').matches && deferredPrompt) {
-                            if (isMobile.value) {
-                                console.log('Activando botón PWA móvil manualmente');
-                                mobilePWAButton.value = true;
-                            } else {
-                                console.log('Activando botón PWA desktop manualmente');
-                                installButton.value = true;
-                            }
-                        }
-                    }, 2000);
 
                     // Verificar que QRCode esté disponible
                     setTimeout(() => {
@@ -965,20 +944,10 @@
                     // Verificar si la PWA ya está instalada
                     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
                         console.log('PWA ya está instalada - no mostrar botón de instalación');
+                        isPWAInstalled.value = true;
                         installButton.value = false;
-                        mobilePWAButton.value = false;
                     } else {
                         console.log('PWA no está instalada - botón de instalación disponible');
-                        // Si no está instalada y tenemos deferredPrompt, mostrar botón apropiado
-                        if (deferredPrompt) {
-                            if (isMobile.value) {
-                                console.log('Activando botón PWA móvil por defecto');
-                                mobilePWAButton.value = true;
-                            } else {
-                                console.log('Activando botón PWA desktop por defecto');
-                                installButton.value = true;
-                            }
-                        }
                     }
                 });
 
@@ -1004,8 +973,8 @@
                     handleOutsideClick,
                     installPWA,
                     installButton,
-                    mobilePWAButton,
-                    isMobile
+                    isMobile,
+                    isPWAInstalled
                 };
             }
         }).mount('#app');
