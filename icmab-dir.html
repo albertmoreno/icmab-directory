@@ -4,13 +4,33 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aplicación Web - ICMAB</title>
+    <title>Portal de Información - ICMAB</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Directori del personal de l'Institut de Ciència de Materials de Barcelona">
+    <meta name="theme-color" content="#0345bf">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ICMAB Directori">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" href="https://media.icmab.es/logos/icmab/faviconblue.png" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
+    <link rel="apple-touch-icon" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
+ 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Fuente Montserrat -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- QR Code Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         /* Reset básico */
         * {
@@ -28,7 +48,6 @@
         header {
             background: #F5F7F9;
             border-bottom: 1px solid #e9ecef;
-            /*position: sticky;*/
             top: 0;
             z-index: 1000;
         }
@@ -48,8 +67,42 @@
             font-size: 0.9em;
         }
 
+        /* Control de visibilidad de logos */
+        .logo-tablet {
+            display: none;
+        }
+
+        /* Responsive para el header */
+        @media (max-width: 1024px) {
+
+            /* iPad vertical, tablets y móviles */
+            .logo-desktop {
+                display: none;
+            }
+
+            .logo-tablet {
+                display: block;
+                height: 60px !important;
+                width: auto;
+                max-width: 100%;
+            }
+
+            .portal-info {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-tablet {
+                height: 50px !important;
+            }
+        }
+
         main {
             min-height: calc(100vh - 100px);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
         }
 
         h2 {
@@ -57,24 +110,10 @@
             margin-bottom: 20px;
         }
 
-        /* Estilo para el mapa */
-        .mapa img {
-            width: 100%;
-            max-width: 600px;
-            margin: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-        }
-
-        /* Directorio */
-        .directorio {
-            max-width: 1200px;
-            margin: auto;
-        }
-
         /* Estilos para las pestañas */
         .nav-tabs {
             border-bottom: 2px solid #0345bf;
+            margin-bottom: 0;
         }
 
         .nav-tabs .nav-link {
@@ -104,17 +143,6 @@
 
         .tab-pane {
             animation: fadeIn 0.3s ease-in;
-        }
-
-        /* Estilos para el diseño boxed */
-        main {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-
-        .nav-tabs {
-            margin-bottom: 0;
         }
 
         @keyframes fadeIn {
@@ -261,268 +289,658 @@
         .emergencia a:hover {
             text-decoration: underline;
         }
+
+        /* QR Code */
+        .qr-section {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .qr-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0345bf;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .qr-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .qr-modal .modal-content {
+            border-radius: 15px;
+        }
+
+        .qr-code-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        #qr-code {
+            /*border: 1px solid #ddd;*/
+            border-radius: 8px;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            min-height: 200px;
+        }
+
+        /* Mejoras adicionales */
+        .search-highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .view-toggle {
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* PWA Styles */
+        .pwa-install-section {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .pwa-install-section .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0345bf;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .pwa-install-section .btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Mejorar experiencia en modo standalone */
+        @media (display-mode: standalone) {
+            header {
+                padding-top: env(safe-area-inset-top);
+            }
+            
+            main {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
     </style>
 </head>
 
 <body>
-    <header class="text-center py-4">
-        <div class="container">
-            <div class="logo-section mb-3">
-                <img src="https://media.icmab.es/logos/icmab/BANNER-WEB-icmabcsic-2025.png" alt="Logo ICMAB" height="80"
-                    class="mb-2">
-                <div class="portal-info">
-                    <h4 class="mb-1 text-dark">Portal de Información</h4>
-                    <p class="text-muted mb-0">Instituto de Ciencia de Materiales de Barcelona</p>
+    <div id="app">
+        <!-- Header -->
+        <header class="text-center py-4">
+            <div class="container">
+                <div class="logo-section mb-3">
+                    <img src="https://media.icmab.es/logos/icmab/BANNER-WEB-icmabcsic-2025.png" alt="Logo ICMAB"
+                        height="80" class="mb-2 img-fluid logo-desktop">
+                    <img src="https://media.icmab.es/logos/icmab/icmab-ochoa-color.svg" alt="Logo ICMAB" height="60"
+                        class="mb-2 img-fluid logo-tablet">
+                    <div class="portal-info">
+                        <h4 class="mb-1 text-dark">Directori del personal</h4>
+                        <p class="text-muted mb-0">Institut de Ciència de Materials de Barcelona</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Contenido principal con pestañas -->
-    <main class="container">
-        <!-- Pestañas de navegación -->
-        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="directorio-tab" data-bs-toggle="tab" data-bs-target="#directorio"
-                    type="button" role="tab" aria-controls="directorio" aria-selected="true">
-                    <i class="bi bi-people"></i> Directorio de Personal
-                </button>
-            </li>
-            <!--li class="nav-item" role="presentation">
-                <button class="nav-link" id="mapa-tab" data-bs-toggle="tab" data-bs-target="#mapa" type="button"
-                    role="tab" aria-controls="mapa" aria-selected="false">
-                    <i class="bi bi-map"></i> Plano del Centro
-                </button>
-            </li-->
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="emergencia-tab" data-bs-toggle="tab" data-bs-target="#emergencia"
-                    type="button" role="tab" aria-controls="emergencia" aria-selected="false">
-                    <i class="bi bi-telephone"></i> Enlaces y Contactos
-                </button>
-            </li>
-        </ul>
+        <!-- Contenido principal -->
+        <main>
+            <!-- Pestañas de navegación -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation" v-for="tab in tabs" :key="tab.id">
+                    <button class="nav-link" :class="{ active: activeTab === tab.id }" @click="activeTab = tab.id"
+                        type="button" role="tab">
+                        <i :class="tab.icon"></i> {{ tab.title }}
+                    </button>
+                </li>
+            </ul>
 
-        <!-- Contenido de las pestañas -->
-        <div class="tab-content" id="mainTabsContent">
-            <!-- Pestaña Directorio (activa por defecto) -->
-            <div class="tab-pane fade show active" id="directorio" role="tabpanel" aria-labelledby="directorio-tab">
-                <div class="mt-4">
-                    <h2><i class="bi bi-people"></i> Directorio de Personal</h2>
-                    <div class="buscador">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" class="form-control" id="buscador"
-                                        placeholder="Buscar por nombre, email o usuario...">
+            <!-- Contenido de las pestañas -->
+            <div class="tab-content">
+                <!-- Pestaña Directorio -->
+                <div class="tab-pane fade" :class="{ 'show active': activeTab === 'directorio' }" role="tabpanel">
+                    <div class="mt-4">
+                        <h2><i class="bi bi-people"></i> Directori de personal</h2>
+
+                        <!-- Estadísticas -->
+                        <div class="stats" v-if="personal.length > 0">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <strong>{{ personal.length }}</strong><br>
+                                    <small class="text-muted">Total</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>{{ filteredPersonal.length }}</strong><br>
+                                    <small class="text-muted">Mostrats</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>{{ uniqueDepartments.length }}</strong><br>
+                                    <small class="text-muted">Departaments</small>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <select class="form-select" id="filtroDepartamento">
-                                    <option value="">Todos los departamentos</option>
-                                </select>
+                        </div>
+
+                        <!-- Buscador -->
+                        <div class="buscador">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                                                 <input type="text" class="form-control" v-model="searchQuery"
+                                             placeholder="Buscar per nom, cognom, cognom2, email o usuari...">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" v-model="selectedDepartment">
+                                        <option value="">Tots els departaments</option>
+                                        <option v-for="dept in uniqueDepartments" :key="dept" :value="dept">
+                                            {{ dept }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="btn-group w-100" role="group">
+                                        <button type="button" class="btn btn-outline-primary"
+                                            :class="{ active: viewMode === 'grid' }" @click="viewMode = 'grid'">
+                                            <i class="bi bi-grid"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary"
+                                            :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">
+                                            <i class="bi bi-list"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row" id="listaPersonal">
-                        <!-- Los datos se cargarán dinámicamente -->
-                    </div>
-                </div>
-            </div>
 
-            <!-- Pestaña Mapa -->
-            <div class="tab-pane fade" id="mapa" role="tabpanel" aria-labelledby="mapa-tab">
-                <div class="mt-4">
-                    <h2><i class="bi bi-map"></i> Plano del Centro</h2>
-                    <div class="row">
-                        <div class="col-md-6 col-lg-3 mb-3">
-                            <img src="URL_DE_PLANO_PLANTA_1" alt="Plano Planta 1" class="img-fluid">
+                        <!-- Lista de personal -->
+                        <div v-if="loading" class="loading">
+                            <i class="bi bi-arrow-clockwise spin"></i> Carregant personal...
                         </div>
-                        <div class="col-md-6 col-lg-3 mb-3">
-                            <img src="URL_DE_PLANO_PLANTA_2" alt="Plano Planta 2" class="img-fluid">
+
+                        <div v-else-if="error" class="error">
+                            Error: {{ error }}
                         </div>
-                        <div class="col-md-6 col-lg-3 mb-3">
-                            <img src="URL_DE_PLANO_PLANTA_3" alt="Plano Planta 3" class="img-fluid">
+
+                        <div v-else-if="filteredPersonal.length === 0" class="loading">
+                            No s'ha trobat cap resultat
                         </div>
-                        <div class="col-md-6 col-lg-3 mb-3">
-                            <img src="URL_DE_PLANO_PLANTA_4" alt="Plano Planta 4" class="img-fluid">
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Pestaña Emergencia -->
-            <div class="tab-pane fade" id="emergencia" role="tabpanel" aria-labelledby="emergencia-tab">
-                <div class="mt-4">
-                    <h2><i class="bi bi-telephone"></i> Enlaces y Contactos de Emergencia</h2>
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <i class="bi bi-exclamation-triangle text-danger"></i>
-                            <strong>Emergencias:</strong> 112
-                        </div>
-                        <div class="list-group-item">
-                            <i class="bi bi-globe text-primary"></i>
-                            <strong>Información General del Instituto:</strong>
-                            <a href="https://www.icmab.es" target="_blank">Página Principal del Instituto</a>
-                        </div>
-                        <div class="list-group-item">
-                            <i class="bi bi-envelope text-primary"></i>
-                            <strong>Contacto de Administración:</strong>
-                            <a href="mailto:administracion@instituto.es">administracion@instituto.es</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        const listaPersonal = document.getElementById("listaPersonal");
-        const buscador = document.getElementById("buscador");
-        const filtroDepartamento = document.getElementById("filtroDepartamento");
-
-        let personal = [];
-        let departamentos = [];
-
-        // Función para mostrar estado de carga
-        function mostrarCarga() {
-            listaPersonal.innerHTML = '<div class="col-12"><div class="loading">Cargando personal...</div></div>';
-        }
-
-        // Función para mostrar error
-        function mostrarError(mensaje) {
-            listaPersonal.innerHTML = `<div class="col-12"><div class="error">Error: ${mensaje}</div></div>`;
-        }
-
-        // Función para cargar departamentos
-        async function cargarDepartamentos() {
-            try {
-                const response = await fetch('api_departamentos.php');
-                const data = await response.json();
-
-                if (data.success) {
-                    departamentos = data.data;
-                    // Llenar el select de departamentos
-                    departamentos.forEach(depto => {
-                        const option = document.createElement('option');
-                        option.value = depto;
-                        option.textContent = depto;
-                        filtroDepartamento.appendChild(option);
-                    });
-                } else {
-                    console.error('Error al cargar departamentos:', data.error);
-                }
-            } catch (error) {
-                console.error('Error al cargar departamentos:', error);
-            }
-        }
-
-        // Función para cargar personal desde la API
-        async function cargarPersonal(busqueda = '', departamento = '') {
-            mostrarCarga();
-
-            try {
-                const params = new URLSearchParams();
-                if (busqueda) params.append('busqueda', busqueda);
-                if (departamento) params.append('departamento', departamento);
-
-                const response = await fetch(`api_personal.php?${params.toString()}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    personal = data.data;
-                    mostrarPersonal();
-                } else {
-                    mostrarError(data.error || 'Error al cargar los datos');
-                }
-            } catch (error) {
-                console.error('Error al cargar personal:', error);
-                mostrarError('Error de conexión con el servidor');
-            }
-        }
-
-        // Función para mostrar el personal
-        function mostrarPersonal() {
-            listaPersonal.innerHTML = "";
-
-            if (personal.length === 0) {
-                listaPersonal.innerHTML = '<div class="col-12"><div class="loading">No se encontraron resultados</div></div>';
-                return;
-            }
-
-            personal.forEach(p => {
-                const div = document.createElement("div");
-                div.classList.add("col-lg-6", "col-md-12", "mb-3");
-                div.innerHTML = `
-                    <div class="card persona h-100">
-                        <div class="card-body">
-                            <div class="photo-section">
-                                <img src="https://media.icmab.es/staff/people/${p.username}.jpg" alt="${p.cognom}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMGUwZTAiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOTk5OTk5Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+'" class="mb-3">
+                        <div v-else>
+                            <!-- Vista de grilla -->
+                            <div v-if="viewMode === 'grid'" class="row">
+                                <div v-for="person in filteredPersonal" :key="person.id"
+                                    class="col-lg-6 col-md-12 mb-3">
+                                    <div class="card persona h-100">
+                                        <div class="card-body">
+                                            <div class="photo-section">
+                                                <img :src="`https://media.icmab.es/staff/people/${person.username}.jpg`"
+                                                    :alt="person.cognom" @error="handleImageError" class="mb-3">
+                                            </div>
+                                            <div class="info-section">
+                                                <h5 class="card-title">
+                                                    <span
+                                                        v-html="highlightSearch(person.cognom + ' ' + (person.cognom2 || '') + ', ' + person.nom)"></span>
+                                                </h5>
+                                                <div v-if="person.department_name" class="department-name">
+                                                    {{ person.department_name }}
+                                                </div>
+                                                <div class="contact-info">
+                                                    <div v-if="person.telefon1" class="contact-item">
+                                                        <i class="bi bi-telephone"></i> {{ person.telefon1 }}
+                                                    </div>
+                                                    <div v-if="person.email" class="contact-item">
+                                                        <i class="bi bi-envelope"></i>
+                                                        <a :href="`mailto:${person.email}`">{{ person.email }}</a>
+                                                    </div>
+                                                    <div v-if="person.despatx" class="contact-item">
+                                                        <i class="bi bi-building"></i> {{ person.despatx }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="info-section">
-                                <h5 class="card-title">${p.cognom} ${p.cognom2 ? ' ' + p.cognom2 : ''}, ${p.nom}</h5>
-                                ${p.department_name ? `<div class="department-name">${p.department_name}</div>` : ''}
-                                <div class="contact-info">
-                                    ${p.telefon1 ? `<div class="contact-item"><i class="bi bi-telephone"></i> ${p.telefon1}</div>` : ''}
-                                    ${p.email ? `<div class="contact-item"><i class="bi bi-envelope"></i> <a href="mailto:${p.email}">${p.email}</a></div>` : ''}
-                                    ${p.despatx ? `<div class="contact-item"><i class="bi bi-building"></i> ${p.despatx}</div>` : ''}
+
+                            <!-- Vista de lista -->
+                            <div v-else class="list-group">
+                                <div v-for="person in filteredPersonal" :key="person.id"
+                                    class="list-group-item list-group-item-action">
+                                    <div class="d-flex align-items-center">
+                                        <img :src="`https://media.icmab.es/staff/people/${person.username}.jpg`"
+                                            :alt="person.cognom" @error="handleImageError" class="rounded-circle me-3"
+                                            style="width: 50px; height: 50px; object-fit: cover;">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <span
+                                                    v-html="highlightSearch(person.cognom + ' ' + (person.cognom2 || '') + ', ' + person.nom)"></span>
+                                            </h6>
+                                            <small v-if="person.department_name" class="text-muted">
+                                                {{ person.department_name }}
+                                            </small>
+                                            <div class="contact-info mt-2">
+                                                <div v-if="person.telefon1" class="contact-item">
+                                                    <i class="bi bi-telephone"></i> {{ person.telefon1 }}
+                                                </div>
+                                                <div v-if="person.email" class="contact-item">
+                                                    <i class="bi bi-envelope"></i> {{ person.email }}
+                                                </div>
+                                                <div v-if="person.despatx" class="contact-item">
+                                                    <i class="bi bi-building"></i> {{ person.despatx }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                `;
-                listaPersonal.appendChild(div);
-            });
-        }
+                </div>
 
-        // Event listeners
-        buscador.addEventListener("input", e => {
-            cargarPersonal(e.target.value, filtroDepartamento.value);
-        });
+                <!-- Pestaña Emergencia -->
+                <div class="tab-pane fade" :class="{ 'show active': activeTab === 'emergencia' }" role="tabpanel">
+                    <div class="mt-4">
+                        <h2><i class="bi bi-telephone"></i> Enllaços i contactes d'emergència</h2>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <i class="bi bi-exclamation-triangle text-danger"></i>
+                                <strong> Emergències: </strong> <a href="tel:112">112</a>
+                            </div>
+                            <div class="list-group-item">
+                                <i class="bi bi-globe text-primary"></i>
+                                <strong> Informació general de l'Institut: </strong>
+                                <a href="https://www.icmab.es" target="_blank">Pàgina
+                                    principal de l'Institut</a>
+                            </div>
+                            <div class="list-group-item">
+                                <i class="bi bi-envelope text-primary"></i>
+                                <strong> Contacte d'administració: </strong>
+                                <a href="mailto:info@icmab.es">info@icmab.es</a>
+                            </div>
+                            <div class="list-group-item">
+                                <i class="bi bi-envelope text-primary"></i>
+                                <strong> Gender Equality and Diversity Committee (confidencial): </strong>
+                                <a href="mailto:contact_equality@icmab.es">contact_equality@icmab.es</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
 
-        filtroDepartamento.addEventListener("change", e => {
-            cargarPersonal(buscador.value, e.target.value);
-        });
+        <!-- Botón QR flotante -->
+        <div class="qr-section">
+            <button class="qr-button" @click="showQR = true" title="Mostrar código QR">
+                <i class="bi bi-qr-code"></i>
+            </button>
+        </div>
 
-        // Función para manejar el cambio de pestañas
-        function handleTabChange() {
-            // Guardar la pestaña activa en localStorage
-            const activeTab = document.querySelector('.nav-link.active');
-            if (activeTab) {
-                localStorage.setItem('activeTab', activeTab.id);
-            }
-        }
+        <!-- Botón de instalación PWA (discreto) -->
+        <div class="pwa-install-section" v-if="installButton" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+            <button class="btn" @click="installPWA" title="Instalar como aplicación">
+                <i class="bi bi-download"></i>
+            </button>
+        </div>
 
-        // Función para restaurar la pestaña activa
-        function restoreActiveTab() {
-            const savedTab = localStorage.getItem('activeTab');
-            if (savedTab) {
-                const tab = document.getElementById(savedTab);
-                if (tab) {
-                    const tabInstance = new bootstrap.Tab(tab);
-                    tabInstance.show();
-                }
-            }
-        }
+        <!-- Modal QR -->
+        <div class="modal fade" :class="{ show: showQR }" :style="{ display: showQR ? 'block' : 'none' }" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content qr-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Codi QR del Portal</h5>
+                        <button type="button" class="btn-close" @click="closeQR"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="qr-code-container">
+                            <div id="qr-code"></div>
+                            <p class="mt-3 text-muted">
+                                Escaneï aquest codi per accedir al portal des de el teu mòbil
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Backdrop del modal -->
+        <div v-if="showQR" class="modal-backdrop fade show"></div>
+    </div>
 
-        // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Restaurar pestaña activa
-            restoreActiveTab();
-
-            // Cargar datos
-            await cargarDepartamentos();
-            await cargarPersonal();
-
-            // Agregar event listeners para las pestañas
-            const tabElements = document.querySelectorAll('[data-bs-toggle="tab"]');
-            tabElements.forEach(tab => {
-                tab.addEventListener('shown.bs.tab', handleTabChange);
-            });
-        });
-    </script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                // Estado reactivo
+                const activeTab = ref('directorio');
+                const personal = ref([]);
+                const departamentos = ref([]);
+                const loading = ref(false);
+                const error = ref(null);
+                const searchQuery = ref('');
+                const selectedDepartment = ref('');
+                const viewMode = ref('grid');
+                const showQR = ref(false);
+
+                // Configuración de pestañas
+                const tabs = ref([
+                    { id: 'directorio', title: 'Directori de personal', icon: 'bi bi-people' },
+                    { id: 'emergencia', title: 'Enllaços i contactes', icon: 'bi bi-telephone' }
+                ]);
+
+                // Computed properties
+                const uniqueDepartments = computed(() => {
+                    const depts = personal.value.map(p => p.department_name).filter(Boolean);
+                    return [...new Set(depts)].sort();
+                });
+
+                const filteredPersonal = computed(() => {
+                    let filtered = personal.value;
+
+                    // Filtro por departamento
+                    if (selectedDepartment.value) {
+                        filtered = filtered.filter(p => p.department_name === selectedDepartment.value);
+                    }
+
+                    // Filtro por búsqueda
+                    if (searchQuery.value) {
+                        const query = searchQuery.value.toLowerCase();
+                        filtered = filtered.filter(p => {
+                            // Verificar que p existe y es un objeto válido
+                            if (!p || typeof p !== 'object') return false;
+                            
+                            // Verificar cada campo individualmente para evitar errores con valores null
+                            const cognomMatch = p.cognom && typeof p.cognom === 'string' && p.cognom.toLowerCase().includes(query);
+                            const cognom2Match = p.cognom2 && typeof p.cognom2 === 'string' && p.cognom2.toLowerCase().includes(query);
+                            const nomMatch = p.nom && typeof p.nom === 'string' && p.nom.toLowerCase().includes(query);
+                            const usernameMatch = p.username && typeof p.username === 'string' && p.username.toLowerCase().includes(query);
+                            const emailMatch = p.email && typeof p.email === 'string' && p.email.toLowerCase().includes(query);
+                            
+                            return cognomMatch || cognom2Match || nomMatch || usernameMatch || emailMatch;
+                        });
+                    }
+
+                    return filtered;
+                });
+
+                // Métodos
+                const loadPersonal = async () => {
+                    loading.value = true;
+                    error.value = null;
+
+                    try {
+                        const response = await fetch('api_personal.php');
+                        const data = await response.json();
+
+                        if (data.success) {
+                            personal.value = data.data;
+                        } else {
+                            error.value = data.error || 'Error al carregar les dades';
+                        }
+                    } catch (err) {
+                        error.value = 'Error de connexió amb el servidor';
+                        console.error('Error:', err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const loadDepartamentos = async () => {
+                    try {
+                        const response = await fetch('api_departamentos.php');
+                        const data = await response.json();
+
+                        if (data.success) {
+                            departamentos.value = data.data;
+                        }
+                    } catch (err) {
+                        console.error('Error al carregar departaments:', err);
+                    }
+                };
+
+
+
+                const highlightSearch = (text) => {
+                    if (!searchQuery.value) return text;
+                    const regex = new RegExp(`(${searchQuery.value})`, 'gi');
+                    return text.replace(regex, '<span class="search-highlight">$1</span>');
+                };
+
+                const handleImageError = (event) => {
+                    event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMGUwZTAiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOTk5OTk5Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+';
+                };
+
+                const generateQR = () => {
+                    if (showQR.value) {
+                        // Usar la URL actual donde está instalado el código
+                        const currentUrl = window.location.href;
+                        const qrContainer = document.getElementById('qr-code');
+
+                        console.log('Generando QR para:', currentUrl);
+                        console.log('QR container encontrado:', qrContainer);
+
+                        if (qrContainer) {
+                            // Limpiar el contenedor antes de generar
+                            qrContainer.innerHTML = '';
+
+                            // Verificar que QRCode esté disponible
+                            if (typeof QRCode !== 'undefined') {
+                                console.log('QRCode library disponible, generando...');
+
+                                try {
+                                    // Crear un nuevo QRCode instance
+                                    const qr = new QRCode(qrContainer, {
+                                        text: currentUrl,
+                                        width: 200,
+                                        height: 200,
+                                        colorDark: '#0345bf',
+                                        colorLight: '#ffffff',
+                                        correctLevel: QRCode.CorrectLevel.H
+                                    });
+
+                                    console.log('QR generado exitosamente');
+                                } catch (error) {
+                                    console.error('Error generando QR:', error);
+                                    qrContainer.innerHTML = '<div style="color: #dc3545; text-align: center; padding: 20px;">Error generando QR</div>';
+                                }
+                            } else {
+                                console.error('QRCode library no está disponible');
+                                qrContainer.innerHTML = '<div style="color: #dc3545; text-align: center; padding: 20px;">QRCode no disponible</div>';
+                            }
+                        } else {
+                            console.error('QR container no encontrado');
+                        }
+                    }
+                };
+
+                const closeQR = () => {
+                    showQR.value = false;
+                };
+
+                // Watchers
+                watch(searchQuery, () => {
+                    // No hacer nada aquí, el filtrado se hace en el computed
+                });
+
+                watch(selectedDepartment, () => {
+                    // No hacer nada aquí, el filtrado se hace en el computed
+                });
+
+                watch(showQR, async (newVal) => {
+                    if (newVal) {
+                        console.log('Modal QR abierto, generando...');
+                        // Esperar a que el DOM se actualice
+                        await nextTick();
+                        // Esperar un poco más para asegurar que el modal esté visible
+                        setTimeout(() => {
+                            console.log('Intentando generar QR...');
+                            generateQR();
+                        }, 300);
+                        // Cerrar modal al hacer clic fuera
+                        document.addEventListener('click', handleOutsideClick);
+                    } else {
+                        document.removeEventListener('click', handleOutsideClick);
+                    }
+                });
+
+                const handleOutsideClick = (event) => {
+                    if (event.target.classList.contains('modal-backdrop')) {
+                        closeQR();
+                    }
+                };
+
+                // PWA Installation
+                let deferredPrompt;
+                const installButton = ref(false);
+
+                const installPWA = () => {
+                    console.log('Intentando instalar PWA...');
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('PWA instalada correctamente');
+                                installButton.value = false; // Ocultar botón después de instalar
+                            } else {
+                                console.log('Instalación cancelada por el usuario');
+                            }
+                            deferredPrompt = null;
+                        });
+                    } else {
+                        console.log('No hay prompt de instalación disponible');
+                    }
+                };
+
+                // Lifecycle
+                onMounted(() => {
+                    loadDepartamentos();
+                    loadPersonal();
+
+                    // Registrar Service Worker para PWA
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.register('/sw.js')
+                            .then((registration) => {
+                                console.log('✅ Service Worker registrado:', registration);
+                            })
+                            .catch((error) => {
+                                console.error('❌ Error registrando Service Worker:', error);
+                            });
+                    }
+
+                    // Escuchar evento de instalación de PWA
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        // Prevenir el banner automático de instalación
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        console.log('PWA instalable detectada - banner automático suprimido');
+                        
+                        // Mostrar el botón discreto
+                        installButton.value = true;
+                        console.log('Botón de instalación PWA activado');
+                    });
+
+                    // Verificación manual para mostrar el botón (fallback)
+                    setTimeout(() => {
+                        console.log('Verificación manual de PWA...');
+                        console.log('DeferredPrompt disponible:', !!deferredPrompt);
+                        console.log('Display mode:', window.matchMedia('(display-mode: standalone)').matches);
+                        
+                        // Si no está en modo standalone y tenemos deferredPrompt, mostrar botón
+                        if (!window.matchMedia('(display-mode: standalone)').matches && deferredPrompt) {
+                            console.log('Activando botón de instalación manualmente');
+                            installButton.value = true;
+                        }
+                    }, 2000);
+
+                    // Verificar que QRCode esté disponible
+                    setTimeout(() => {
+                        console.log('Verificando QRCode library...');
+                        if (typeof QRCode !== 'undefined') {
+                            console.log('✅ QRCode library cargada correctamente');
+                        } else {
+                            console.error('❌ QRCode library no está disponible');
+                        }
+                    }, 1000);
+
+                    // Verificar si la PWA ya está instalada
+                    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+                        console.log('PWA ya está instalada - no mostrar botón de instalación');
+                        installButton.value = false;
+                    } else {
+                        console.log('PWA no está instalada - botón de instalación disponible');
+                        // Si no está instalada y tenemos deferredPrompt, mostrar botón
+                        if (deferredPrompt) {
+                            console.log('Activando botón de instalación por defecto');
+                            installButton.value = true;
+                        }
+                    }
+                });
+
+                return {
+                    activeTab,
+                    personal,
+                    departamentos,
+                    loading,
+                    error,
+                    searchQuery,
+                    selectedDepartment,
+                    viewMode,
+                    showQR,
+                    tabs,
+                    uniqueDepartments,
+                    filteredPersonal,
+                    loadPersonal,
+                    loadDepartamentos,
+                    highlightSearch,
+                    handleImageError,
+                    generateQR,
+                    closeQR,
+                    handleOutsideClick,
+                    installPWA,
+                    installButton
+                };
+            }
+        }).mount('#app');
+    </script>
 </body>
 
 </html>

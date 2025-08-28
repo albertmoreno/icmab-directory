@@ -5,6 +5,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal de Información - ICMAB</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Directori del personal de l'Institut de Ciència de Materials de Barcelona">
+    <meta name="theme-color" content="#0345bf">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ICMAB Directori">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" href="https://media.icmab.es/logos/icmab/faviconblue.png" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
+    <link rel="apple-touch-icon" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
+ 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -335,6 +351,53 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
+        /* PWA Styles */
+        .pwa-install-section {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .pwa-install-section .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0345bf;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .pwa-install-section .btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Mejorar experiencia en modo standalone */
+        @media (display-mode: standalone) {
+            header {
+                padding-top: env(safe-area-inset-top);
+            }
+            
+            main {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
     </style>
 </head>
 
@@ -549,6 +612,13 @@
             </button>
         </div>
 
+        <!-- Botón de instalación PWA (discreto) -->
+        <div class="pwa-install-section" v-if="installButton" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+            <button class="btn" @click="installPWA" title="Instalar como aplicación">
+                <i class="bi bi-download"></i>
+            </button>
+        </div>
+
         <!-- Modal QR -->
         <div class="modal fade" :class="{ show: showQR }" :style="{ display: showQR ? 'block' : 'none' }" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
@@ -758,10 +828,68 @@
                     }
                 };
 
+                // PWA Installation
+                let deferredPrompt;
+                const installButton = ref(false);
+
+                const installPWA = () => {
+                    console.log('Intentando instalar PWA...');
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('PWA instalada correctamente');
+                                installButton.value = false; // Ocultar botón después de instalar
+                            } else {
+                                console.log('Instalación cancelada por el usuario');
+                            }
+                            deferredPrompt = null;
+                        });
+                    } else {
+                        console.log('No hay prompt de instalación disponible');
+                    }
+                };
+
                 // Lifecycle
                 onMounted(() => {
                     loadDepartamentos();
                     loadPersonal();
+
+                    // Registrar Service Worker para PWA
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.register('/sw.js')
+                            .then((registration) => {
+                                console.log('✅ Service Worker registrado:', registration);
+                            })
+                            .catch((error) => {
+                                console.error('❌ Error registrando Service Worker:', error);
+                            });
+                    }
+
+                    // Escuchar evento de instalación de PWA
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        // Prevenir el banner automático de instalación
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        console.log('PWA instalable detectada - banner automático suprimido');
+                        
+                        // Mostrar el botón discreto
+                        installButton.value = true;
+                        console.log('Botón de instalación PWA activado');
+                    });
+
+                    // Verificación manual para mostrar el botón (fallback)
+                    setTimeout(() => {
+                        console.log('Verificación manual de PWA...');
+                        console.log('DeferredPrompt disponible:', !!deferredPrompt);
+                        console.log('Display mode:', window.matchMedia('(display-mode: standalone)').matches);
+                        
+                        // Si no está en modo standalone y tenemos deferredPrompt, mostrar botón
+                        if (!window.matchMedia('(display-mode: standalone)').matches && deferredPrompt) {
+                            console.log('Activando botón de instalación manualmente');
+                            installButton.value = true;
+                        }
+                    }, 2000);
 
                     // Verificar que QRCode esté disponible
                     setTimeout(() => {
@@ -772,6 +900,19 @@
                             console.error('❌ QRCode library no está disponible');
                         }
                     }, 1000);
+
+                    // Verificar si la PWA ya está instalada
+                    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+                        console.log('PWA ya está instalada - no mostrar botón de instalación');
+                        installButton.value = false;
+                    } else {
+                        console.log('PWA no está instalada - botón de instalación disponible');
+                        // Si no está instalada y tenemos deferredPrompt, mostrar botón
+                        if (deferredPrompt) {
+                            console.log('Activando botón de instalación por defecto');
+                            installButton.value = true;
+                        }
+                    }
                 });
 
                 return {
@@ -793,7 +934,9 @@
                     handleImageError,
                     generateQR,
                     closeQR,
-                    handleOutsideClick
+                    handleOutsideClick,
+                    installPWA,
+                    installButton
                 };
             }
         }).mount('#app');

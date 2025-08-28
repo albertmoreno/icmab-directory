@@ -1,86 +1,142 @@
-# Directorio ICMAB - Conexión con MySQL
+# Directori del Personal - ICMAB
 
-Esta aplicación web muestra un directorio de personal del ICMAB con datos obtenidos desde una base de datos MySQL local.
+Una aplicación web progresiva (PWA) para el directorio del personal del Institut de Ciència de Materials de Barcelona.
 
-## Archivos del proyecto
+## 🚀 Características
 
-- `icmab-dir.html` - Aplicación web principal
-- `config.php` - Configuración de conexión a la base de datos
-- `api_personal.php` - API para obtener datos del personal
-- `api_departamentos.php` - API para obtener departamentos
-- `database.sql` - Script SQL para crear la base de datos (opcional)
+### Funcionalidades Principales
+- **Búsqueda avanzada**: Busca por nombre, apellidos, email y usuario
+- **Filtrado por departamento**: Filtra personal por departamento
+- **Vistas múltiples**: Vista de grilla y lista
+- **Código QR**: Genera QR de la URL actual
+- **Diseño responsive**: Optimizado para móviles y tablets
 
-## Configuración
+### PWA (Progressive Web App) - Funcionalidad adicional
+- **Instalable**: Los usuarios pueden instalar la app en su dispositivo (opcional)
+- **Funcionamiento offline**: Cachea recursos para uso sin conexión
+- **Experiencia nativa**: Se comporta como una app nativa cuando está instalada
+- **Actualizaciones automáticas**: Se actualiza automáticamente
+- **No intrusiva**: La instalación es opcional y discreta
 
-### 1. Configurar la base de datos
+## 📱 Instalación como PWA
 
-Edita el archivo `config.php` y ajusta los parámetros de conexión:
+### En Android (Chrome):
+1. Abre la aplicación en Chrome
+2. Aparecerá un banner "Añadir a pantalla de inicio"
+3. Toca "Añadir" para instalar
 
-```php
-define('DB_HOST', 'localhost');     // Host de MySQL
-define('DB_USER', 'root');          // Usuario de MySQL
-define('DB_PASS', '');              // Contraseña de MySQL
-define('DB_NAME', 'icmab_dir');     // Nombre de tu base de datos
-```
+### En iOS (Safari):
+1. Abre la aplicación en Safari
+2. Toca el botón compartir (cuadrado con flecha)
+3. Selecciona "Añadir a pantalla de inicio"
 
-### 2. Estructura de la tabla
+### Botón de instalación discreto:
+- En dispositivos compatibles aparecerá un pequeño botón circular con icono de descarga en la esquina inferior izquierda
+- Es opcional y no interfiere con la experiencia principal de la web
 
-Asegúrate de que tu tabla `personal` tenga la siguiente estructura:
+## 🛠️ Instalación del Proyecto
 
+### Requisitos
+- Servidor web con PHP 7.4+
+- Base de datos MySQL/MariaDB
+- HTTPS (requerido para PWA)
+
+### Configuración
+1. Clona o descarga los archivos
+2. Configura la base de datos en `config.php`
+3. Asegúrate de que el servidor tenga HTTPS habilitado
+4. Accede a la aplicación
+
+### Archivos principales
+- `icmab-dir-vue.html` - Aplicación principal
+- `api_personal.php` - API para datos del personal
+- `api_departamentos.php` - API para departamentos
+- `manifest.json` - Configuración PWA
+- `sw.js` - Service Worker para cacheo offline
+
+## 🔧 Configuración de la Base de Datos
+
+### Estructura requerida:
 ```sql
-CREATE TABLE personal (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    nombre VARCHAR(100) NOT NULL,
-    telefono VARCHAR(20),
+-- Tabla de personal
+CREATE TABLE icmab_personal (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cognom VARCHAR(100),
+    cognom2 VARCHAR(100),
+    nom VARCHAR(100),
+    username VARCHAR(50),
     email VARCHAR(100),
-    despacho VARCHAR(50),
-    departamento VARCHAR(100),
-    cargo VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    telefon1 VARCHAR(20),
+    despatx VARCHAR(50),
+    department_id INT,
+    status_id INT DEFAULT 1
+);
+
+-- Tabla de departamentos
+CREATE TABLE icmab_departments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    departament VARCHAR(100)
 );
 ```
 
-### 3. Ejecutar la aplicación
+## 🌐 Compatibilidad
 
-1. Coloca todos los archivos en tu servidor web (Apache/Nginx con PHP)
-2. Asegúrate de que PHP tenga acceso a MySQL
-3. Abre `icmab-dir.html` en tu navegador
+### Navegadores soportados:
+- Chrome 67+
+- Firefox 67+
+- Safari 11.1+
+- Edge 79+
 
-## Funcionalidades
+### Funcionalidades PWA:
+- **Instalación**: Chrome, Edge, Firefox
+- **Offline**: Todos los navegadores modernos
+- **Notificaciones**: Chrome, Firefox, Edge
 
-- **Búsqueda en tiempo real**: Busca por nombre, email o username
-- **Filtro por departamento**: Filtra el personal por departamento
-- **Datos dinámicos**: Los datos se cargan desde MySQL
-- **Imágenes de perfil**: Muestra fotos de perfil con fallback a avatar genérico
-- **Información completa**: Muestra teléfono, email, despacho, departamento y cargo
+## 📊 Estadísticas
 
-## APIs disponibles
+La aplicación muestra:
+- Total de personas en el directorio
+- Número de resultados filtrados
+- Número de departamentos
 
-### GET /api_personal.php
-Obtiene la lista del personal con filtros opcionales:
+## 🎨 Personalización
 
-- `busqueda`: Busca en nombre, email o username
-- `departamento`: Filtra por departamento específico
+### Colores principales:
+- Azul principal: `#0345bf`
+- Fondo: `#F5F7F9`
+- Texto: `#333`
 
-Ejemplo: `api_personal.php?busqueda=juan&departamento=Departamento de Física`
+### Logos:
+- Desktop: Banner completo del ICMAB
+- Móvil/Tablet: Logo compacto
+- PWA: Logo ICMAB como icono
 
-### GET /api_departamentos.php
-Obtiene la lista de departamentos disponibles.
+## 🔒 Seguridad
 
-## Solución de problemas
+- Solo personal con `status_id=1` es visible
+- APIs con validación de entrada
+- Headers CORS configurados
+- Manejo de errores robusto
 
-### Error de conexión a la base de datos
-- Verifica que MySQL esté ejecutándose
-- Comprueba las credenciales en `config.php`
-- Asegúrate de que la base de datos existe
+## 📈 Rendimiento
 
-### Error 500 en las APIs
-- Verifica que PHP tenga permisos para leer los archivos
-- Comprueba los logs de error de PHP
-- Asegúrate de que la extensión PDO esté habilitada
+- Cacheo inteligente de recursos
+- Lazy loading de imágenes
+- Optimización para móviles
+- Service Worker para cacheo offline
 
-### No se cargan las imágenes
-- Las imágenes se buscan en `https://media.icmab.es/staff/people/{username}.jpg`
-- Si no existe la imagen, se muestra un avatar genérico
+## 🤝 Contribución
+
+Para contribuir al proyecto:
+1. Fork el repositorio
+2. Crea una rama para tu feature
+3. Haz commit de tus cambios
+4. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está desarrollado para el Institut de Ciència de Materials de Barcelona (ICMAB-CSIC).
+
+---
+
+**Desarrollado para ICMAB-CSIC** 🧪
