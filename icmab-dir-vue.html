@@ -681,11 +681,11 @@
 
                 const generateQR = () => {
                     if (showQR.value) {
-                        // Usar una URL de prueba más simple
-                        const testUrl = 'https://www.icmab.es';
+                        // Usar la URL actual donde está instalado el código
+                        const currentUrl = window.location.href;
                         const qrContainer = document.getElementById('qr-code');
 
-                        console.log('Generando QR para:', testUrl);
+                        console.log('Generando QR para:', currentUrl);
                         console.log('QR container encontrado:', qrContainer);
 
                         if (qrContainer) {
@@ -699,7 +699,7 @@
                                 try {
                                     // Crear un nuevo QRCode instance
                                     const qr = new QRCode(qrContainer, {
-                                        text: testUrl,
+                                        text: currentUrl,
                                         width: 200,
                                         height: 200,
                                         colorDark: '#0345bf',
