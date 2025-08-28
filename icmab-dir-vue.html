@@ -399,8 +399,8 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                        <input type="text" class="form-control" v-model="searchQuery"
-                                            placeholder="Buscar por nom, cognom, email o usuari...">
+                                                                                 <input type="text" class="form-control" v-model="searchQuery"
+                                             placeholder="Buscar per nom, cognom, cognom2, email o usuari...">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -614,13 +614,19 @@
                     // Filtro por búsqueda
                     if (searchQuery.value) {
                         const query = searchQuery.value.toLowerCase();
-                        filtered = filtered.filter(p =>
-                            p.cognom.toLowerCase().includes(query) ||
-                            p.cognom2.toLowerCase().includes(query) ||
-                            p.nom.toLowerCase().includes(query) ||
-                            p.username.toLowerCase().includes(query) ||
-                            (p.email && p.email.toLowerCase().includes(query))
-                        );
+                        filtered = filtered.filter(p => {
+                            // Verificar que p existe y es un objeto válido
+                            if (!p || typeof p !== 'object') return false;
+                            
+                            // Verificar cada campo individualmente para evitar errores con valores null
+                            const cognomMatch = p.cognom && typeof p.cognom === 'string' && p.cognom.toLowerCase().includes(query);
+                            const cognom2Match = p.cognom2 && typeof p.cognom2 === 'string' && p.cognom2.toLowerCase().includes(query);
+                            const nomMatch = p.nom && typeof p.nom === 'string' && p.nom.toLowerCase().includes(query);
+                            const usernameMatch = p.username && typeof p.username === 'string' && p.username.toLowerCase().includes(query);
+                            const emailMatch = p.email && typeof p.email === 'string' && p.email.toLowerCase().includes(query);
+                            
+                            return cognomMatch || cognom2Match || nomMatch || usernameMatch || emailMatch;
+                        });
                     }
 
                     return filtered;
@@ -632,11 +638,7 @@
                     error.value = null;
 
                     try {
-                        const params = new URLSearchParams();
-                        if (searchQuery.value) params.append('busqueda', searchQuery.value);
-                        if (selectedDepartment.value) params.append('departamento', selectedDepartment.value);
-
-                        const response = await fetch(`api_personal.php?${params.toString()}`);
+                        const response = await fetch('api_personal.php');
                         const data = await response.json();
 
                         if (data.success) {
@@ -664,6 +666,8 @@
                         console.error('Error al carregar departaments:', err);
                     }
                 };
+
+
 
                 const highlightSearch = (text) => {
                     if (!searchQuery.value) return text;
@@ -724,11 +728,11 @@
 
                 // Watchers
                 watch(searchQuery, () => {
-                    loadPersonal();
+                    // No hacer nada aquí, el filtrado se hace en el computed
                 });
 
                 watch(selectedDepartment, () => {
-                    loadPersonal();
+                    // No hacer nada aquí, el filtrado se hace en el computed
                 });
 
                 watch(showQR, async (newVal) => {

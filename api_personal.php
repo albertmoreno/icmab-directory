@@ -41,8 +41,10 @@ try {
 
     // Agregar filtros si se proporcionan
     if (!empty($busqueda)) {
-        $sql .= " AND (cognom LIKE ? OR email LIKE ? OR username LIKE ?)";
+        $sql .= " AND (cognom LIKE ? OR cognom2 LIKE ? OR nom LIKE ? OR email LIKE ? OR username LIKE ?)";
         $busquedaParam = "%$busqueda%";
+        $params[] = $busquedaParam;
+        $params[] = $busquedaParam;
         $params[] = $busquedaParam;
         $params[] = $busquedaParam;
         $params[] = $busquedaParam;
