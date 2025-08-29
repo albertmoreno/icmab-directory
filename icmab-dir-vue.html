@@ -252,18 +252,49 @@
 
         /* Responsive para móviles */
         @media (max-width: 768px) {
+            /* Vista de grilla (cards) */
             .persona .card-body {
                 flex-direction: column;
                 text-align: center;
+                align-items: center;
             }
 
             .persona .photo-section {
                 margin-right: 0;
                 margin-bottom: 15px;
+                display: flex;
+                justify-content: center;
             }
 
             .persona .info-section {
                 text-align: center;
+                width: 100%;
+            }
+
+            /* Vista de lista */
+            .list-group-item .d-flex {
+                flex-direction: column !important;
+                text-align: center !important;
+                align-items: center !important;
+            }
+
+            .list-group-item .d-flex img {
+                margin: 0 auto 15px auto !important;
+                display: block !important;
+                float: none !important;
+            }
+
+            .list-group-item .flex-grow-1 {
+                text-align: center !important;
+                width: 100% !important;
+            }
+
+            .list-group-item .contact-info {
+                text-align: center !important;
+            }
+
+            .list-group-item .contact-item {
+                justify-content: center !important;
             }
         }
 
@@ -650,12 +681,12 @@
 
         <!-- Botón de instalación PWA móvil (debajo del QR) -->
         <button v-if="isMobile && !isPWAInstalled" class="mobile-pwa-button" @click="installPWA" title="Instalar com a aplicació">
-            <i class="bi bi-download"></i>Instalar app
+            <i class="bi bi-download"></i>Instal·lar aplicació
         </button>
 
         <!-- Botón de instalación PWA desktop (discreto) -->
         <div class="pwa-install-section" v-if="installButton && !isMobile" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
-            <button class="btn" @click="installPWA" title="Instalar como aplicación">
+            <button class="btn" @click="installPWA" title="Instal·lar com a aplicació">
                 <i class="bi bi-download"></i>
             </button>
         </div>
