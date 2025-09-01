@@ -684,10 +684,7 @@
             <i class="bi bi-download"></i>Instal·lar aplicació
         </button>
 
-        <!-- Botón de instalación PWA manual para testing -->
-        <button v-if="!isPWAInstalled" class="mobile-pwa-button" style="bottom: 160px; background: #28a745;" @click="installPWA" title="Instalar PWA (Testing)">
-            <i class="bi bi-download"></i>Test PWA
-        </button>
+
 
         <!-- Botón de instalación PWA desktop (discreto) -->
         <div class="pwa-install-section" v-if="installButton && !isMobile" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
@@ -696,17 +693,7 @@
             </button>
         </div>
 
-        <!-- Debug PWA info (solo en desarrollo) -->
-        <div v-if="true" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 9999;">
-            <div>Mobile: {{ isMobile }}</div>
-            <div>PWA Installed: {{ isPWAInstalled }}</div>
-            <div>Install Button: {{ installButton }}</div>
-            <div>Service Worker: {{ pwaDebugInfo.serviceWorkerSupported }}</div>
-            <div>Before Install: {{ pwaDebugInfo.beforeinstallpromptFired }}</div>
-            <div>App Installed: {{ pwaDebugInfo.appinstalledFired }}</div>
-            <div>Display Mode: {{ pwaDebugInfo.displayMode }}</div>
-            <button @click="testPWAInstallation" style="margin-top: 10px; padding: 5px; background: #0345bf; color: white; border: none; border-radius: 3px;">Test PWA</button>
-        </div>
+
 
         <!-- Modal QR -->
         <div class="modal fade" :class="{ show: showQR }" :style="{ display: showQR ? 'block' : 'none' }" tabindex="-1">
@@ -922,31 +909,17 @@
                 const installButton = ref(false);
                 const isMobile = ref(false);
                 const isPWAInstalled = ref(false);
-                const pwaDebugInfo = ref({
-                    serviceWorkerSupported: false,
-                    beforeinstallpromptFired: false,
-                    appinstalledFired: false,
-                    displayMode: 'browser'
-                });
 
                 const installPWA = () => {
-                    console.log('Intentando instalar PWA...');
-                    console.log('deferredPrompt disponible:', !!deferredPrompt);
-                    
                     if (deferredPrompt) {
                         // Mostrar el prompt de instalación
                         deferredPrompt.prompt();
                         
                         // Esperar la respuesta del usuario
                         deferredPrompt.userChoice.then((choiceResult) => {
-                            console.log('Usuario eligió:', choiceResult.outcome);
-                            
                             if (choiceResult.outcome === 'accepted') {
-                                console.log('PWA instal·lada correctament');
                                 isPWAInstalled.value = true;
                                 installButton.value = false;
-                            } else {
-                                console.log('Instal·lació cancel·lada per l\'usuari');
                             }
                             
                             // Limpiar el prompt
@@ -956,65 +929,17 @@
                             deferredPrompt = null;
                         });
                     } else {
-                        console.log('No hi ha prompt d\'instal·lació disponible');
-                        
                         // Verificar si ya está instalada
                         if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-                            console.log('La PWA ya está instalada');
                             isPWAInstalled.value = true;
                         } else {
-                            console.log('PWA no disponible para instalación');
                             // Mostrar instrucciones alternativas
                             alert('Para instalar la aplicación:\n\nEn Chrome/Edge: Busca el botón de instalación en la barra de direcciones\nEn Firefox: Busca el botón de instalación en la barra de direcciones\nEn Safari: Usa "Compartir" > "Añadir a pantalla de inicio"');
                         }
                     }
                 };
 
-                const testPWAInstallation = () => {
-                    console.log('=== PWA Installation Test ===');
-                    console.log('Service Worker supported:', 'serviceWorker' in navigator);
-                    console.log('Before install prompt fired:', pwaDebugInfo.value.beforeinstallpromptFired);
-                    console.log('App installed event fired:', pwaDebugInfo.value.appinstalledFired);
-                    console.log('Display mode:', pwaDebugInfo.value.displayMode);
-                    console.log('Deferred prompt available:', !!deferredPrompt);
-                    console.log('Install button visible:', installButton.value);
-                    console.log('PWA installed:', isPWAInstalled.value);
-                    console.log('Is mobile:', isMobile.value);
-                    
-                    // Test Service Worker registration
-                    if ('serviceWorker' in navigator) {
-                        navigator.serviceWorker.getRegistrations().then(registrations => {
-                            console.log('Active Service Workers:', registrations);
-                        });
-                    }
-                    
-                    // Test PWA criteria
-                    const pwaCriteria = {
-                        hasManifest: !!document.querySelector('link[rel="manifest"]'),
-                        hasServiceWorker: 'serviceWorker' in navigator,
-                        isHTTPS: location.protocol === 'https:' || location.hostname === 'localhost',
-                        hasValidManifest: false
-                    };
-                    
-                    // Check manifest
-                    const manifestLink = document.querySelector('link[rel="manifest"]');
-                    if (manifestLink) {
-                        fetch(manifestLink.href)
-                            .then(response => response.json())
-                            .then(manifest => {
-                                pwaCriteria.hasValidManifest = !!manifest.name && !!manifest.start_url;
-                                console.log('PWA Criteria:', pwaCriteria);
-                                console.log('Manifest:', manifest);
-                            })
-                            .catch(error => {
-                                console.error('Error loading manifest:', error);
-                                pwaCriteria.hasValidManifest = false;
-                                console.log('PWA Criteria:', pwaCriteria);
-                            });
-                    } else {
-                        console.log('PWA Criteria:', pwaCriteria);
-                    }
-                };
+
 
                 // Lifecycle
                 onMounted(() => {
@@ -1024,23 +949,19 @@
                     // Detectar si es móvil
                     const checkMobile = () => {
                         isMobile.value = window.innerWidth <= 768;
-                        console.log('Dispositivo detectado como móvil:', isMobile.value);
                     };
                     checkMobile();
                     window.addEventListener('resize', checkMobile);
 
                     // Registrar Service Worker para PWA
                     if ('serviceWorker' in navigator) {
-                        pwaDebugInfo.value.serviceWorkerSupported = true;
                         navigator.serviceWorker.register('./sw.js')
                             .then((registration) => {
-                                console.log('✅ Service Worker registrat:', registration);
+                                console.log('Service Worker registrado correctamente');
                             })
                             .catch((error) => {
-                                console.error('❌ Error registrant Service Worker:', error);
+                                console.error('Error registrando Service Worker:', error);
                             });
-                    } else {
-                        console.log('❌ Service Worker no soportado');
                     }
 
                     // Escuchar evento de instalación de PWA
@@ -1048,54 +969,30 @@
                         // Prevenir el banner automático de instalación
                         e.preventDefault();
                         deferredPrompt = e;
-                        pwaDebugInfo.value.beforeinstallpromptFired = true;
-                        console.log('PWA instalable detectada - banner automático suprimido');
                         
                         // Mostrar el botón apropiado según el dispositivo
                         if (!isMobile.value) {
                             installButton.value = true;
-                            console.log('Botón PWA desktop activado');
                         }
                     });
 
                     // Escuchar cuando la PWA se instala
                     window.addEventListener('appinstalled', (e) => {
-                        console.log('PWA instalada exitosamente');
-                        pwaDebugInfo.value.appinstalledFired = true;
                         isPWAInstalled.value = true;
                         installButton.value = false;
                         deferredPrompt = null;
                     });
 
-                    // Verificar que QRCode esté disponible
-                    setTimeout(() => {
-                        console.log('Verificando QRCode library...');
-                        if (typeof QRCode !== 'undefined') {
-                            console.log('✅ QRCode library cargada correctamente');
-                        } else {
-                            console.error('❌ QRCode library no está disponible');
-                        }
-                    }, 1000);
+
 
                     // Verificar si la PWA ya está instalada
                     const checkPWAInstalled = () => {
                         const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
                         const isInApp = window.navigator.standalone === true; // iOS
                         
-                        // Actualizar debug info
-                        pwaDebugInfo.value.displayMode = isStandalone ? 'standalone' : (isInApp ? 'ios-standalone' : 'browser');
-                        
-                        console.log('Verificando instalación PWA:');
-                        console.log('- display-mode standalone:', isStandalone);
-                        console.log('- iOS standalone:', isInApp);
-                        console.log('- Display mode:', pwaDebugInfo.value.displayMode);
-                        
                         if (isStandalone || isInApp) {
-                            console.log('PWA ya está instalada - no mostrar botón de instalación');
                             isPWAInstalled.value = true;
                             installButton.value = false;
-                        } else {
-                            console.log('PWA no está instalada - botón de instalación disponible');
                         }
                     };
                     
@@ -1131,9 +1028,7 @@
                     installPWA,
                     installButton,
                     isMobile,
-                    isPWAInstalled,
-                    pwaDebugInfo,
-                    testPWAInstallation
+                    isPWAInstalled
                 };
             }
         }).mount('#app');
