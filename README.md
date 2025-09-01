@@ -48,7 +48,7 @@ Una aplicación web progresiva (PWA) para el directorio del personal del Institu
 4. Accede a la aplicación
 
 ### Archivos principales
-- `icmab-dir-vue.html` - Aplicación principal
+- `index.html` - Aplicación principal
 - `api_personal.php` - API para datos del personal
 - `api_departamentos.php` - API para departamentos
 - `manifest.json` - Configuración PWA

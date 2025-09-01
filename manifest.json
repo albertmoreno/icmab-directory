@@ -2,7 +2,7 @@
   "name": "Directori del Personal - ICMAB",
   "short_name": "ICMAB Directori",
   "description": "Directori del personal de l'Institut de Ciència de Materials de Barcelona",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#F5F7F9",
   "theme_color": "#0345bf",
