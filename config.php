@@ -1,9 +1,24 @@
 <?php
-// Configuración de la base de datos
-define('DB_HOST', 'ls-fcd38e5539374a6b76db30bc7cbeaeb9cac63d2f.crtzec2dueus.eu-west-3.rds.amazonaws.com');
-define('DB_USER', 'dbreaduser');  // Cambiar por tu usuario de MySQL
-define('DB_PASS', '$JeeBEETZ14pe');      // Cambiar por tu contraseña de MySQL
-define('DB_NAME', 'ICMAB-laravel'); // Nombre de la base de datos
+// Configuración de la base de datos AWS ORIGINAL
+/*define('DB_HOST', 'ls-fcd38e5539374a6b76db30bc7cbeaeb9cac63d2f.crtzec2dueus.eu-west-3.rds.amazonaws.com');
+define('DB_USER', 'dbmasteruser');
+define('DB_PASS', 'v3moy=$.C>AqE`x~uK|QdY|^2`87o:');
+define('DB_NAME', 'ICMAB-laravel');*/
+
+// Configuración de la base de datos AWS ORIGINAL SOLO LECTURA
+/*define('DB_HOST', 'ls-fcd38e5539374a6b76db30bc7cbeaeb9cac63d2f.crtzec2dueus.eu-west-3.rds.amazonaws.com');
+define('DB_NAME', 'ICMAB-laravel');
+define('DB_USER', 'dbreaduser');
+define('DB_PASS', '$JeeBEETZ14pe');      
+*/
+
+// Configuración de la base de datos LOCAL
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'uriticv2');
+define('DB_USER', 'albert');
+define('DB_PASS', 'albert');
+
+
 
 // Crear conexión
 function getConnection()

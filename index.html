@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal de Información - ICMAB</title>
-    
+
     <!-- PWA Meta Tags -->
     <meta name="description" content="Directori del personal de l'Institut de Ciència de Materials de Barcelona">
     <meta name="theme-color" content="#0345bf">
@@ -13,12 +13,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ICMAB Directori">
     <meta name="mobile-web-app-capable" content="yes">
-    
+
     <!-- PWA Icons -->
     <link rel="icon" href="https://media.icmab.es/logos/icmab/faviconblue.png" sizes="any">
     <link rel="icon" type="image/svg+xml" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
     <link rel="apple-touch-icon" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
- 
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <!-- Bootstrap CSS -->
@@ -31,441 +31,7 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        /* Reset básico */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        header {
-            background: #F5F7F9;
-            border-bottom: 1px solid #e9ecef;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .logo-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .portal-info h4 {
-            color: #0345bf;
-            font-weight: 600;
-        }
-
-        .portal-info p {
-            font-size: 0.9em;
-        }
-
-        /* Control de visibilidad de logos */
-        .logo-tablet {
-            display: none;
-        }
-
-        /* Responsive para el header */
-        @media (max-width: 1024px) {
-
-            /* iPad vertical, tablets y móviles */
-            .logo-desktop {
-                display: none;
-            }
-
-            .logo-tablet {
-                display: block;
-                height: 60px !important;
-                width: auto;
-                max-width: 100%;
-            }
-
-            .portal-info {
-                display: none;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .logo-tablet {
-                height: 50px !important;
-            }
-        }
-
-        main {
-            min-height: calc(100vh - 100px);
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-
-        h2 {
-            color: #0345bf;
-            margin-bottom: 20px;
-        }
-
-        /* Estilos para las pestañas */
-        .nav-tabs {
-            border-bottom: 2px solid #0345bf;
-            margin-bottom: 0;
-        }
-
-        .nav-tabs .nav-link {
-            color: #666;
-            border: none;
-            border-bottom: 3px solid transparent;
-            font-weight: 600;
-            padding: 12px 20px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tabs .nav-link:hover {
-            color: #0345bf;
-            border-bottom: 3px solid #0345bf;
-            background-color: transparent;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: #0345bf;
-            background-color: transparent;
-            border-bottom: 3px solid #0345bf;
-        }
-
-        .tab-content {
-            padding: 20px 0;
-        }
-
-        .tab-pane {
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .buscador {
-            margin-bottom: 30px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-
-        .error {
-            text-align: center;
-            padding: 20px;
-            color: #d32f2f;
-            background: #ffebee;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-
-        .persona {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            height: 100%;
-        }
-
-        .persona:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .persona .card-body {
-            display: flex;
-            align-items: flex-start;
-            padding: 20px;
-        }
-
-        .persona .photo-section {
-            flex-shrink: 0;
-            margin-right: 20px;
-        }
-
-        .persona img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #0345bf;
-        }
-
-        .persona .info-section {
-            flex: 1;
-            text-align: left;
-        }
-
-        .persona .card-title {
-            color: #0345bf;
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 1.1em;
-        }
-
-        .persona .department-name {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-            font-style: italic;
-        }
-
-        .contact-info {
-            margin-top: 10px;
-        }
-
-        .contact-info .contact-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 6px;
-            font-size: 0.85em;
-        }
-
-        .contact-info .contact-item i {
-            margin-right: 8px;
-            color: #0345bf;
-            width: 16px;
-        }
-
-        .contact-info .contact-item a {
-            color: #0345bf;
-            text-decoration: none;
-        }
-
-        .contact-info .contact-item a:hover {
-            text-decoration: underline;
-        }
-
-        /* Responsive para móviles */
-        @media (max-width: 768px) {
-            /* Vista de grilla (cards) */
-            .persona .card-body {
-                flex-direction: column;
-                text-align: center;
-                align-items: center;
-            }
-
-            .persona .photo-section {
-                margin-right: 0;
-                margin-bottom: 15px;
-                display: flex;
-                justify-content: center;
-            }
-
-            .persona .info-section {
-                text-align: center;
-                width: 100%;
-            }
-
-            /* Vista de lista */
-            .list-group-item .d-flex {
-                flex-direction: column !important;
-                text-align: center !important;
-                align-items: center !important;
-            }
-
-            .list-group-item .d-flex img {
-                margin: 0 auto 15px auto !important;
-                display: block !important;
-                float: none !important;
-            }
-
-            .list-group-item .flex-grow-1 {
-                text-align: center !important;
-                width: 100% !important;
-            }
-
-            .list-group-item .contact-info {
-                text-align: center !important;
-            }
-
-            .list-group-item .contact-item {
-                justify-content: center !important;
-            }
-        }
-
-        /* Emergencia */
-        .emergencia .list-group-item {
-            border-left: none;
-            border-right: none;
-        }
-
-        .emergencia .list-group-item:first-child {
-            border-top: none;
-        }
-
-        .emergencia .list-group-item:last-child {
-            border-bottom: none;
-        }
-
-        .emergencia a {
-            color: #0345bf;
-            text-decoration: none;
-        }
-
-        .emergencia a:hover {
-            text-decoration: underline;
-        }
-
-        /* QR Code */
-        .qr-section {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .qr-button {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #0345bf;
-            color: white;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-        }
-
-        .qr-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .qr-modal .modal-content {
-            border-radius: 15px;
-        }
-
-        .qr-code-container {
-            text-align: center;
-            padding: 20px;
-        }
-
-        #qr-code {
-            /*border: 1px solid #ddd;*/
-            border-radius: 8px;
-            background: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto;
-            min-height: 200px;
-        }
-
-        /* Mejoras adicionales */
-        .search-highlight {
-            background-color: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-
-        .view-toggle {
-            margin-bottom: 20px;
-        }
-
-        .stats {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        /* PWA Styles */
-        .pwa-install-section {
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .pwa-install-section .btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #0345bf;
-            color: white;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .pwa-install-section .btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Botón PWA móvil debajo del QR */
-        .mobile-pwa-button {
-            display: none;
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            z-index: 999;
-            background: #0345bf;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            padding: 12px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .mobile-pwa-button:hover {
-            background: #023a9e;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .mobile-pwa-button i {
-            margin-right: 8px;
-        }
-
-        /* Mostrar solo en móviles */
-        @media (max-width: 768px) {
-            .mobile-pwa-button {
-                display: block;
-            }
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        /* Mejorar experiencia en modo standalone */
-        @media (display-mode: standalone) {
-            header {
-                padding-top: env(safe-area-inset-top);
-            }
-            
-            main {
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -529,8 +95,8 @@
                                 <div class="col-md-6">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                                                                 <input type="text" class="form-control" v-model="searchQuery"
-                                             placeholder="Buscar per nom, cognom, cognom2, email o usuari...">
+                                        <input type="text" class="form-control" v-model="searchQuery"
+                                            placeholder="Buscar per nom, cognom, cognom2, email o usuari...">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -578,7 +144,8 @@
                                         <div class="card-body">
                                             <div class="photo-section">
                                                 <img :src="`https://media.icmab.es/staff/people/${person.username}.jpg`"
-                                                    :alt="person.cognom" @error="handleImageError" class="mb-3">
+                                                    :alt="person.cognom" :data-person-id="person.id"
+                                                    @error="(e) => handleImageError(e, person)" class="mb-3">
                                             </div>
                                             <div class="info-section">
                                                 <h5 class="card-title">
@@ -589,15 +156,41 @@
                                                     {{ person.department_name }}
                                                 </div>
                                                 <div class="contact-info">
-                                                    <div v-if="person.telefon1" class="contact-item">
-                                                        <i class="bi bi-telephone"></i> {{ person.telefon1 }}
+                                                    <div v-if="person.telefon1 || person.telefon2" class="contact-item">
+                                                        <i class="bi bi-telephone"></i>
+                                                        <template v-if="person.telefon2 && person.telefon1">
+                                                            <a :href="`tel:${person.telefon2}`">{{ person.telefon2
+                                                                }}</a> | Ext. {{ person.telefon1 }}
+                                                        </template>
+                                                        <template v-else-if="person.telefon2">
+                                                            <a :href="`tel:${person.telefon2}`">{{ person.telefon2
+                                                                }}</a>
+                                                        </template>
+                                                        <template v-else>
+                                                            Ext. {{ person.telefon1 }}
+                                                        </template>
                                                     </div>
                                                     <div v-if="person.email" class="contact-item">
                                                         <i class="bi bi-envelope"></i>
                                                         <a :href="`mailto:${person.email}`">{{ person.email }}</a>
                                                     </div>
-                                                    <div v-if="person.despatx" class="contact-item">
-                                                        <i class="bi bi-building"></i> {{ person.despatx }}
+                                                    <div v-if="hasValidContactValue(person.despatx) || hasValidContactValue(person.bustia)"
+                                                        class="contact-item">
+                                                        <template
+                                                            v-if="hasValidContactValue(person.despatx) && hasValidContactValue(person.bustia)">
+                                                            <i class="bi bi-building"></i>{{
+                                                            formatContactValue(person.despatx) }}
+                                                            | <i class="bi bi-mailbox ms-1"></i>{{
+                                                            formatContactValue(person.bustia) }}
+                                                        </template>
+                                                        <template v-else-if="hasValidContactValue(person.despatx)">
+                                                            <i class="bi bi-building"></i>{{
+                                                            formatContactValue(person.despatx) }}
+                                                        </template>
+                                                        <template v-else>
+                                                            <i class="bi bi-mailbox"></i>{{
+                                                            formatContactValue(person.bustia) }}
+                                                        </template>
                                                     </div>
                                                 </div>
                                             </div>
@@ -612,7 +205,8 @@
                                     class="list-group-item list-group-item-action">
                                     <div class="d-flex align-items-center">
                                         <img :src="`https://media.icmab.es/staff/people/${person.username}.jpg`"
-                                            :alt="person.cognom" @error="handleImageError" class="rounded-circle me-3"
+                                            :alt="person.cognom" :data-person-id="person.id"
+                                            @error="(e) => handleImageError(e, person)" class="rounded-circle me-3"
                                             style="width: 50px; height: 50px; object-fit: cover;">
                                         <div class="flex-grow-1">
                                             <h6 class="mb-1">
@@ -623,14 +217,39 @@
                                                 {{ person.department_name }}
                                             </small>
                                             <div class="contact-info mt-2">
-                                                <div v-if="person.telefon1" class="contact-item">
-                                                    <i class="bi bi-telephone"></i> {{ person.telefon1 }}
+                                                <div v-if="person.telefon1 || person.telefon2" class="contact-item">
+                                                    <i class="bi bi-telephone"></i>
+                                                    <template v-if="person.telefon2 && person.telefon1">
+                                                        <a :href="`tel:${person.telefon2}`">{{ person.telefon2 }}</a> |
+                                                        Ext. {{ person.telefon1 }}
+                                                    </template>
+                                                    <template v-else-if="person.telefon2">
+                                                        <a :href="`tel:${person.telefon2}`">{{ person.telefon2 }}</a>
+                                                    </template>
+                                                    <template v-else>
+                                                        ÇExt. {{ person.telefon1 }}
+                                                    </template>
                                                 </div>
                                                 <div v-if="person.email" class="contact-item">
                                                     <i class="bi bi-envelope"></i> {{ person.email }}
                                                 </div>
-                                                <div v-if="person.despatx" class="contact-item">
-                                                    <i class="bi bi-building"></i> {{ person.despatx }}
+                                                <div v-if="hasValidContactValue(person.despatx) || hasValidContactValue(person.bustia)"
+                                                    class="contact-item">
+                                                    <template
+                                                        v-if="hasValidContactValue(person.despatx) && hasValidContactValue(person.bustia)">
+                                                        <i class="bi bi-building"></i>{{
+                                                        formatContactValue(person.despatx) }}
+                                                        | <span class="ms-1"><i class="bi bi-mailbox"></i>{{
+                                                            formatContactValue(person.bustia) }}</span>
+                                                    </template>
+                                                    <template v-else-if="hasValidContactValue(person.despatx)">
+                                                        <i class="bi bi-building"></i>{{
+                                                        formatContactValue(person.despatx) }}
+                                                    </template>
+                                                    <template v-else>
+                                                        <i class="bi bi-mailbox"></i>{{
+                                                        formatContactValue(person.bustia) }}
+                                                    </template>
                                                 </div>
                                             </div>
                                         </div>
@@ -643,28 +262,153 @@
 
                 <!-- Pestaña Emergencia -->
                 <div class="tab-pane fade" :class="{ 'show active': activeTab === 'emergencia' }" role="tabpanel">
-                    <div class="mt-4">
-                        <h2><i class="bi bi-telephone"></i> Enllaços i contactes d'emergència</h2>
-                        <div class="list-group">
-                            <div class="list-group-item">
-                                <i class="bi bi-exclamation-triangle text-danger"></i>
-                                <strong> Emergències: </strong> <a href="tel:112">112</a>
-                            </div>
-                            <div class="list-group-item">
-                                <i class="bi bi-globe text-primary"></i>
-                                <strong> Informació general de l'Institut: </strong>
-                                <a href="https://www.icmab.es" target="_blank">Pàgina
-                                    principal de l'Institut</a>
-                            </div>
-                            <div class="list-group-item">
-                                <i class="bi bi-envelope text-primary"></i>
-                                <strong> Contacte d'administració: </strong>
-                                <a href="mailto:info@icmab.es">info@icmab.es</a>
-                            </div>
-                            <div class="list-group-item">
-                                <i class="bi bi-envelope text-primary"></i>
-                                <strong> Gender Equality and Diversity Committee (confidencial): </strong>
-                                <a href="mailto:contact_equality@icmab.es">contact_equality@icmab.es</a>
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="page-flex">
+                                <div class="col-4">
+                                    <h2 class="senyalizacion-title">Señalización</h2>
+
+                                    <div class="signage-list">
+                                        <div class="sign-item">
+                                            <div class="sign-icon">Q</div>
+                                            <div>
+                                                <div><b>Laboratorios químicos</b></div>
+                                                <div>
+                                                    Presencia de productos de diferente nivel de toxicidad.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="sign-item">
+                                            <div class="sign-icon">B</div>
+                                            <div>
+                                                <div><b>Laboratorio biológico nivel 2</b></div>
+                                                <div>
+                                                    Zona de acceso controlado.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="sign-item">
+                                            <div class="sign-icon">R</div>
+                                            <div>
+                                                <div><b>Instalación radiactiva</b></div>
+                                                <div>
+                                                    Zona de acceso restringido.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="sign-item">
+                                            <div class="sign-icon">M</div>
+                                            <div>
+                                                <div><b>Campo magnético elevado</b></div>
+                                                <div>
+                                                    Zonas de acceso restringido.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="sign-item">
+                                            <div class="sign-icon">L</div>
+                                            <div>
+                                                <div><b>Radiación láser</b></div>
+                                                <div>
+                                                    Zonas de acceso restringido. Peligro de quemadura de piel y ojos en
+                                                    función de la longitud de onda y la potencia del láser.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="sign-item">
+                                            <div class="sign-icon">C</div>
+                                            <div>
+                                                <div><b>Líquidos criogénicos</b></div>
+                                                <div>
+                                                    Riesgo de quemadura de piel y ojos, riesgo de desplazamiento de
+                                                    oxígeno.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <h2 class="senyalizacion-title">En caso de emergencia</h2>
+                                    <p>
+                                        Le agradecemos su colaboración siguiendo estas indicaciones:
+                                    </p>
+
+                                    <div>
+                                        <div>
+                                            <div class="emergency-item">
+                                                <div class="emergency-icon">⇄</div>
+                                                <div>
+                                                    <strong>Identifíquese</strong> al entrar y avise cuando abandone el
+                                                    centro.
+                                                </div>
+                                            </div>
+
+                                            <div class="emergency-item">
+                                                <div class="emergency-icon">👥</div>
+                                                <div>
+                                                    Considere a la persona que ha venido a visitar como la
+                                                    <strong>responsable de ayudarle</strong> en caso de emergencia.
+                                                </div>
+                                            </div>
+
+                                            <div class="emergency-item">
+                                                <div class="emergency-icon">⏰</div>
+                                                <div>
+                                                    Si al sonar la alarma se encuentra solo, diríjase al
+                                                    <strong>punto de encuentro</strong> correspondiente.
+                                                </div>
+                                            </div>
+
+                                            <div class="emergency-item">
+                                                <div class="emergency-icon">!</div>
+                                                <p>
+                                                    En caso de detectar una situación de emergencia
+                                                    <strong>avise a su contacto en el centro</strong>.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <br>
+                                    <hr><br>
+                                    <h2 class="senyalizacion-title">Teléfonos de emergencia</h2>
+                                    <p><b style="color: red;">EMERGENCIA 112</b></p>
+                                    <p><b>SEGURIDAD DEL CAMPUS</b> <br>93 581 25 25</p>
+                                    <p><b>URGENCIAS MUTUA FREMAP</b> <br>900 61 00 61 (España) <br>+ 34 91 919 61 61
+                                        (Extranjero)
+                                    </p>
+                                    <p><b>INFORMACIÓN TOXICOLOGICA</b> <br>91 562 04 20</p>
+                                    <p><b>ÁREA DE PREVENCIÓN DE RIESGOS LABORALES</b> <br>91 568 19 25/81</p>
+                                    <p><b>UNIDAD DE VIGILANCIA DE LA SALUD</b> <br>91 568 19 31/32/33</p>
+                                    <p><b>SERVICIO DE PREVENCIÓN DE BARCELONA</b> <br>93 442 6576</p>
+                                </div>
+                                <div class="col-4">
+                                    <h2 class="senyalizacion-title">Puntos de encuentro</h2>
+
+                                    <b>Esquema de situación</b>
+                                    <p>
+                                        • Punto de encuentro ICMAB<br>
+                                        • Punto de encuentro MATGAS<br>
+                                        • Parque de Bomberos de Cerdanyola<br>
+                                        • Campus UAB Bellaterra<br>
+                                        • AP-7
+                                    </p>
+                                    <img src="puntos_encuentro.png" alt="Mapa de situación" class="mb-3">
+
+                                    <br><b>Zonas comunes</b>
+                                    <p>
+                                        • Cafetería ICMAB<br>
+                                        • Cafetería MATGAS<br>
+                                        • Salas de Reuniones<br>
+                                        • Jardín ICMAB<br>
+                                        • Aseos
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -680,14 +424,16 @@
         </div>
 
         <!-- Botón de instalación PWA móvil (debajo del QR) -->
-        <button v-if="isMobile && !isPWAInstalled" class="mobile-pwa-button" @click="installPWA" title="Instalar com a aplicació">
+        <button v-if="isMobile && !isPWAInstalled" class="mobile-pwa-button" @click="installPWA"
+            title="Instalar com a aplicació">
             <i class="bi bi-download"></i>Instal·lar aplicació
         </button>
 
 
 
         <!-- Botón de instalación PWA desktop (discreto) -->
-        <div class="pwa-install-section" v-if="installButton && !isMobile" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+        <div class="pwa-install-section" v-if="installButton && !isMobile"
+            style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
             <button class="btn" @click="installPWA" title="Instal·lar com a aplicació">
                 <i class="bi bi-download"></i>
             </button>
@@ -763,14 +509,14 @@
                         filtered = filtered.filter(p => {
                             // Verificar que p existe y es un objeto válido
                             if (!p || typeof p !== 'object') return false;
-                            
+
                             // Verificar cada campo individualmente para evitar errores con valores null
                             const cognomMatch = p.cognom && typeof p.cognom === 'string' && p.cognom.toLowerCase().includes(query);
                             const cognom2Match = p.cognom2 && typeof p.cognom2 === 'string' && p.cognom2.toLowerCase().includes(query);
                             const nomMatch = p.nom && typeof p.nom === 'string' && p.nom.toLowerCase().includes(query);
                             const usernameMatch = p.username && typeof p.username === 'string' && p.username.toLowerCase().includes(query);
                             const emailMatch = p.email && typeof p.email === 'string' && p.email.toLowerCase().includes(query);
-                            
+
                             return cognomMatch || cognom2Match || nomMatch || usernameMatch || emailMatch;
                         });
                     }
@@ -815,14 +561,62 @@
 
 
 
+                const hasValidContactValue = (value) => {
+                    if (value === null || value === undefined) return false;
+                    if (typeof value === 'string') {
+                        const normalized = value.trim().toLowerCase();
+                        return normalized !== '' && normalized !== 'null';
+                    }
+                    return true;
+                };
+
+                const formatContactValue = (value) => {
+                    if (!hasValidContactValue(value)) return '';
+                    return typeof value === 'string' ? value.trim() : value;
+                };
+
                 const highlightSearch = (text) => {
                     if (!searchQuery.value) return text;
                     const regex = new RegExp(`(${searchQuery.value})`, 'gi');
                     return text.replace(regex, '<span class="search-highlight">$1</span>');
                 };
 
-                const handleImageError = (event) => {
-                    event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMGUwZTAiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOTk5OTk5Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+';
+                const getInitials = (person) => {
+                    let initials = '';
+                    // Obtener primera letra del primer apellido
+                    if (person.cognom && person.cognom.trim()) {
+                        initials += person.cognom.trim().charAt(0).toUpperCase();
+                    }
+                    // Obtener primera letra del nombre
+                    if (person.nom && person.nom.trim()) {
+                        initials += person.nom.trim().charAt(0).toUpperCase();
+                    }
+                    // Si no hay iniciales, usar las primeras dos letras del username
+                    if (!initials && person.username) {
+                        initials = person.username.substring(0, 2).toUpperCase();
+                    }
+                    return initials || '??';
+                };
+
+                const generateInitialsAvatar = (person, size = 80) => {
+                    const initials = getInitials(person);
+                    // Usar siempre el azul primario
+                    const bgColor = '#0345bf';
+
+                    const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${bgColor}"/><text x="${size / 2}" y="${size / 2}" font-family="Arial, sans-serif" font-size="${size * 0.4}" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">${initials}</text></svg>`;
+
+                    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+                };
+
+                const handleImageError = (event, person) => {
+                    if (person) {
+                        // Obtener el tamaño de la imagen desde los estilos
+                        const width = event.target.offsetWidth || 80;
+                        event.target.src = generateInitialsAvatar(person, width);
+                    } else {
+                        // Fallback si no hay información de persona
+                        event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMGUwZTAiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOTk5OTk5Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+';
+                    }
                 };
 
                 const generateQR = () => {
@@ -914,14 +708,14 @@
                     if (deferredPrompt) {
                         // Mostrar el prompt de instalación
                         deferredPrompt.prompt();
-                        
+
                         // Esperar la respuesta del usuario
                         deferredPrompt.userChoice.then((choiceResult) => {
                             if (choiceResult.outcome === 'accepted') {
                                 isPWAInstalled.value = true;
                                 installButton.value = false;
                             }
-                            
+
                             // Limpiar el prompt
                             deferredPrompt = null;
                         }).catch((error) => {
@@ -969,7 +763,7 @@
                         // Prevenir el banner automático de instalación
                         e.preventDefault();
                         deferredPrompt = e;
-                        
+
                         // Mostrar el botón apropiado según el dispositivo
                         if (!isMobile.value) {
                             installButton.value = true;
@@ -989,15 +783,15 @@
                     const checkPWAInstalled = () => {
                         const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
                         const isInApp = window.navigator.standalone === true; // iOS
-                        
+
                         if (isStandalone || isInApp) {
                             isPWAInstalled.value = true;
                             installButton.value = false;
                         }
                     };
-                    
+
                     checkPWAInstalled();
-                    
+
                     // Verificar cambios en el modo de visualización
                     if (window.matchMedia) {
                         const mediaQuery = window.matchMedia('(display-mode: standalone)');
@@ -1021,6 +815,8 @@
                     loadPersonal,
                     loadDepartamentos,
                     highlightSearch,
+                    hasValidContactValue,
+                    formatContactValue,
                     handleImageError,
                     generateQR,
                     closeQR,
