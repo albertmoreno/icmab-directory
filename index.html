@@ -468,366 +468,383 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+        // Esperar a que Vue esté disponible y el DOM esté listo
+        function initApp() {
+            if (typeof Vue === 'undefined') {
+                console.error('Vue no está cargado. Esperando...');
+                setTimeout(initApp, 100);
+                return;
+            }
 
-        createApp({
-            setup() {
-                // Estado reactivo
-                const activeTab = ref('directorio');
-                const personal = ref([]);
-                const departamentos = ref([]);
-                const loading = ref(false);
-                const error = ref(null);
-                const searchQuery = ref('');
-                const selectedDepartment = ref('');
-                const viewMode = ref('grid');
-                const showQR = ref(false);
+            const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
-                // Configuración de pestañas
-                const tabs = ref([
-                    { id: 'directorio', title: 'Directori de personal', icon: 'bi bi-people' },
-                    { id: 'emergencia', title: 'Enllaços i contactes', icon: 'bi bi-telephone' }
-                ]);
+            createApp({
+                setup() {
+                    // Estado reactivo
+                    const activeTab = ref('directorio');
+                    const personal = ref([]);
+                    const departamentos = ref([]);
+                    const loading = ref(false);
+                    const error = ref(null);
+                    const searchQuery = ref('');
+                    const selectedDepartment = ref('');
+                    const viewMode = ref('grid');
+                    const showQR = ref(false);
 
-                // Computed properties
-                const uniqueDepartments = computed(() => {
-                    const depts = personal.value.map(p => p.department_name).filter(Boolean);
-                    return [...new Set(depts)].sort();
-                });
+                    // Configuración de pestañas
+                    const tabs = ref([
+                        { id: 'directorio', title: 'Directori de personal', icon: 'bi bi-people' },
+                        { id: 'emergencia', title: 'Enllaços i contactes', icon: 'bi bi-telephone' }
+                    ]);
 
-                const filteredPersonal = computed(() => {
-                    let filtered = personal.value;
+                    // Computed properties
+                    const uniqueDepartments = computed(() => {
+                        const depts = personal.value.map(p => p.department_name).filter(Boolean);
+                        return [...new Set(depts)].sort();
+                    });
 
-                    // Filtro por departamento
-                    if (selectedDepartment.value) {
-                        filtered = filtered.filter(p => p.department_name === selectedDepartment.value);
-                    }
+                    const filteredPersonal = computed(() => {
+                        let filtered = personal.value;
 
-                    // Filtro por búsqueda
-                    if (searchQuery.value) {
-                        const query = searchQuery.value.toLowerCase();
-                        filtered = filtered.filter(p => {
-                            // Verificar que p existe y es un objeto válido
-                            if (!p || typeof p !== 'object') return false;
+                        // Filtro por departamento
+                        if (selectedDepartment.value) {
+                            filtered = filtered.filter(p => p.department_name === selectedDepartment.value);
+                        }
 
-                            // Verificar cada campo individualmente para evitar errores con valores null
-                            const cognomMatch = p.cognom && typeof p.cognom === 'string' && p.cognom.toLowerCase().includes(query);
-                            const cognom2Match = p.cognom2 && typeof p.cognom2 === 'string' && p.cognom2.toLowerCase().includes(query);
-                            const nomMatch = p.nom && typeof p.nom === 'string' && p.nom.toLowerCase().includes(query);
-                            const usernameMatch = p.username && typeof p.username === 'string' && p.username.toLowerCase().includes(query);
-                            const emailMatch = p.email && typeof p.email === 'string' && p.email.toLowerCase().includes(query);
+                        // Filtro por búsqueda
+                        if (searchQuery.value) {
+                            const query = searchQuery.value.toLowerCase();
+                            filtered = filtered.filter(p => {
+                                // Verificar que p existe y es un objeto válido
+                                if (!p || typeof p !== 'object') return false;
 
-                            return cognomMatch || cognom2Match || nomMatch || usernameMatch || emailMatch;
-                        });
-                    }
+                                // Verificar cada campo individualmente para evitar errores con valores null
+                                const cognomMatch = p.cognom && typeof p.cognom === 'string' && p.cognom.toLowerCase().includes(query);
+                                const cognom2Match = p.cognom2 && typeof p.cognom2 === 'string' && p.cognom2.toLowerCase().includes(query);
+                                const nomMatch = p.nom && typeof p.nom === 'string' && p.nom.toLowerCase().includes(query);
+                                const usernameMatch = p.username && typeof p.username === 'string' && p.username.toLowerCase().includes(query);
+                                const emailMatch = p.email && typeof p.email === 'string' && p.email.toLowerCase().includes(query);
 
-                    return filtered;
-                });
+                                return cognomMatch || cognom2Match || nomMatch || usernameMatch || emailMatch;
+                            });
+                        }
 
-                // Métodos
-                const loadPersonal = async () => {
-                    loading.value = true;
-                    error.value = null;
+                        return filtered;
+                    });
 
-                    try {
-                        const response = await fetch('api_personal.php');
-                        const data = await response.json();
+                    // Métodos
+                    const loadPersonal = async () => {
+                        loading.value = true;
+                        error.value = null;
 
-                        if (data.success) {
-                            personal.value = data.data;
+                        try {
+                            const response = await fetch('api_personal.php');
+                            const data = await response.json();
+
+                            if (data.success) {
+                                personal.value = data.data;
+                            } else {
+                                error.value = data.error || 'Error al carregar les dades';
+                            }
+                        } catch (err) {
+                            error.value = 'Error de connexió amb el servidor';
+                            console.error('Error:', err);
+                        } finally {
+                            loading.value = false;
+                        }
+                    };
+
+                    const loadDepartamentos = async () => {
+                        try {
+                            const response = await fetch('api_departamentos.php');
+                            const data = await response.json();
+
+                            if (data.success) {
+                                departamentos.value = data.data;
+                            }
+                        } catch (err) {
+                            console.error('Error al carregar departaments:', err);
+                        }
+                    };
+
+
+
+                    const hasValidContactValue = (value) => {
+                        if (value === null || value === undefined) return false;
+                        if (typeof value === 'string') {
+                            const normalized = value.trim().toLowerCase();
+                            return normalized !== '' && normalized !== 'null';
+                        }
+                        return true;
+                    };
+
+                    const formatContactValue = (value) => {
+                        if (!hasValidContactValue(value)) return '';
+                        return typeof value === 'string' ? value.trim() : value;
+                    };
+
+                    const highlightSearch = (text) => {
+                        if (!searchQuery.value) return text;
+                        const regex = new RegExp(`(${searchQuery.value})`, 'gi');
+                        return text.replace(regex, '<span class="search-highlight">$1</span>');
+                    };
+
+                    const getInitials = (person) => {
+                        let initials = '';
+                        // Obtener primera letra del primer apellido
+                        if (person.cognom && person.cognom.trim()) {
+                            initials += person.cognom.trim().charAt(0).toUpperCase();
+                        }
+                        // Obtener primera letra del nombre
+                        if (person.nom && person.nom.trim()) {
+                            initials += person.nom.trim().charAt(0).toUpperCase();
+                        }
+                        // Si no hay iniciales, usar las primeras dos letras del username
+                        if (!initials && person.username) {
+                            initials = person.username.substring(0, 2).toUpperCase();
+                        }
+                        return initials || '??';
+                    };
+
+                    const generateInitialsAvatar = (person, size = 80) => {
+                        const initials = getInitials(person);
+                        // Usar siempre el azul primario
+                        const bgColor = '#0345bf';
+
+                        const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${bgColor}"/><text x="${size / 2}" y="${size / 2}" font-family="Arial, sans-serif" font-size="${size * 0.4}" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">${initials}</text></svg>`;
+
+                        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+                    };
+
+                    const handleImageError = (event, person) => {
+                        if (person) {
+                            // Obtener el tamaño de la imagen desde los estilos
+                            const width = event.target.offsetWidth || 80;
+                            event.target.src = generateInitialsAvatar(person, width);
                         } else {
-                            error.value = data.error || 'Error al carregar les dades';
+                            // Fallback si no hay información de persona
+                            event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMGUwZTAiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOTk5OTk5Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+';
                         }
-                    } catch (err) {
-                        error.value = 'Error de connexió amb el servidor';
-                        console.error('Error:', err);
-                    } finally {
-                        loading.value = false;
-                    }
-                };
+                    };
 
-                const loadDepartamentos = async () => {
-                    try {
-                        const response = await fetch('api_departamentos.php');
-                        const data = await response.json();
+                    const generateQR = () => {
+                        if (showQR.value) {
+                            // Usar la URL actual donde está instalado el código
+                            const currentUrl = window.location.href;
+                            const qrContainer = document.getElementById('qr-code');
 
-                        if (data.success) {
-                            departamentos.value = data.data;
-                        }
-                    } catch (err) {
-                        console.error('Error al carregar departaments:', err);
-                    }
-                };
+                            console.log('Generando QR para:', currentUrl);
+                            console.log('QR container encontrado:', qrContainer);
 
+                            if (qrContainer) {
+                                // Limpiar el contenedor antes de generar
+                                qrContainer.innerHTML = '';
 
+                                // Verificar que QRCode esté disponible
+                                if (typeof QRCode !== 'undefined') {
+                                    console.log('QRCode library disponible, generando...');
 
-                const hasValidContactValue = (value) => {
-                    if (value === null || value === undefined) return false;
-                    if (typeof value === 'string') {
-                        const normalized = value.trim().toLowerCase();
-                        return normalized !== '' && normalized !== 'null';
-                    }
-                    return true;
-                };
+                                    try {
+                                        // Crear un nuevo QRCode instance
+                                        const qr = new QRCode(qrContainer, {
+                                            text: currentUrl,
+                                            width: 200,
+                                            height: 200,
+                                            colorDark: '#0345bf',
+                                            colorLight: '#ffffff',
+                                            correctLevel: QRCode.CorrectLevel.H
+                                        });
 
-                const formatContactValue = (value) => {
-                    if (!hasValidContactValue(value)) return '';
-                    return typeof value === 'string' ? value.trim() : value;
-                };
-
-                const highlightSearch = (text) => {
-                    if (!searchQuery.value) return text;
-                    const regex = new RegExp(`(${searchQuery.value})`, 'gi');
-                    return text.replace(regex, '<span class="search-highlight">$1</span>');
-                };
-
-                const getInitials = (person) => {
-                    let initials = '';
-                    // Obtener primera letra del primer apellido
-                    if (person.cognom && person.cognom.trim()) {
-                        initials += person.cognom.trim().charAt(0).toUpperCase();
-                    }
-                    // Obtener primera letra del nombre
-                    if (person.nom && person.nom.trim()) {
-                        initials += person.nom.trim().charAt(0).toUpperCase();
-                    }
-                    // Si no hay iniciales, usar las primeras dos letras del username
-                    if (!initials && person.username) {
-                        initials = person.username.substring(0, 2).toUpperCase();
-                    }
-                    return initials || '??';
-                };
-
-                const generateInitialsAvatar = (person, size = 80) => {
-                    const initials = getInitials(person);
-                    // Usar siempre el azul primario
-                    const bgColor = '#0345bf';
-
-                    const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${bgColor}"/><text x="${size / 2}" y="${size / 2}" font-family="Arial, sans-serif" font-size="${size * 0.4}" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">${initials}</text></svg>`;
-
-                    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-                };
-
-                const handleImageError = (event, person) => {
-                    if (person) {
-                        // Obtener el tamaño de la imagen desde los estilos
-                        const width = event.target.offsetWidth || 80;
-                        event.target.src = generateInitialsAvatar(person, width);
-                    } else {
-                        // Fallback si no hay información de persona
-                        event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMGUwZTAiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOTk5OTk5Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+';
-                    }
-                };
-
-                const generateQR = () => {
-                    if (showQR.value) {
-                        // Usar la URL actual donde está instalado el código
-                        const currentUrl = window.location.href;
-                        const qrContainer = document.getElementById('qr-code');
-
-                        console.log('Generando QR para:', currentUrl);
-                        console.log('QR container encontrado:', qrContainer);
-
-                        if (qrContainer) {
-                            // Limpiar el contenedor antes de generar
-                            qrContainer.innerHTML = '';
-
-                            // Verificar que QRCode esté disponible
-                            if (typeof QRCode !== 'undefined') {
-                                console.log('QRCode library disponible, generando...');
-
-                                try {
-                                    // Crear un nuevo QRCode instance
-                                    const qr = new QRCode(qrContainer, {
-                                        text: currentUrl,
-                                        width: 200,
-                                        height: 200,
-                                        colorDark: '#0345bf',
-                                        colorLight: '#ffffff',
-                                        correctLevel: QRCode.CorrectLevel.H
-                                    });
-
-                                    console.log('QR generado exitosamente');
-                                } catch (error) {
-                                    console.error('Error generando QR:', error);
-                                    qrContainer.innerHTML = '<div style="color: #dc3545; text-align: center; padding: 20px;">Error generando QR</div>';
+                                        console.log('QR generado exitosamente');
+                                    } catch (error) {
+                                        console.error('Error generando QR:', error);
+                                        qrContainer.innerHTML = '<div style="color: #dc3545; text-align: center; padding: 20px;">Error generando QR</div>';
+                                    }
+                                } else {
+                                    console.error('QRCode library no está disponible');
+                                    qrContainer.innerHTML = '<div style="color: #dc3545; text-align: center; padding: 20px;">QRCode no disponible</div>';
                                 }
                             } else {
-                                console.error('QRCode library no está disponible');
-                                qrContainer.innerHTML = '<div style="color: #dc3545; text-align: center; padding: 20px;">QRCode no disponible</div>';
+                                console.error('QR container no encontrado');
                             }
-                        } else {
-                            console.error('QR container no encontrado');
                         }
-                    }
-                };
+                    };
 
-                const closeQR = () => {
-                    showQR.value = false;
-                };
+                    const closeQR = () => {
+                        showQR.value = false;
+                    };
 
-                // Watchers
-                watch(searchQuery, () => {
-                    // No hacer nada aquí, el filtrado se hace en el computed
-                });
+                    // Watchers
+                    watch(searchQuery, () => {
+                        // No hacer nada aquí, el filtrado se hace en el computed
+                    });
 
-                watch(selectedDepartment, () => {
-                    // No hacer nada aquí, el filtrado se hace en el computed
-                });
+                    watch(selectedDepartment, () => {
+                        // No hacer nada aquí, el filtrado se hace en el computed
+                    });
 
-                watch(showQR, async (newVal) => {
-                    if (newVal) {
-                        console.log('Modal QR abierto, generando...');
-                        // Esperar a que el DOM se actualice
-                        await nextTick();
-                        // Esperar un poco más para asegurar que el modal esté visible
-                        setTimeout(() => {
-                            console.log('Intentando generar QR...');
-                            generateQR();
-                        }, 300);
-                        // Cerrar modal al hacer clic fuera
-                        document.addEventListener('click', handleOutsideClick);
-                    } else {
-                        document.removeEventListener('click', handleOutsideClick);
-                    }
-                });
+                    watch(showQR, async (newVal) => {
+                        if (newVal) {
+                            console.log('Modal QR abierto, generando...');
+                            // Esperar a que el DOM se actualice
+                            await nextTick();
+                            // Esperar un poco más para asegurar que el modal esté visible
+                            setTimeout(() => {
+                                console.log('Intentando generar QR...');
+                                generateQR();
+                            }, 300);
+                            // Cerrar modal al hacer clic fuera
+                            document.addEventListener('click', handleOutsideClick);
+                        } else {
+                            document.removeEventListener('click', handleOutsideClick);
+                        }
+                    });
 
-                const handleOutsideClick = (event) => {
-                    if (event.target.classList.contains('modal-backdrop')) {
-                        closeQR();
-                    }
-                };
+                    const handleOutsideClick = (event) => {
+                        if (event.target.classList.contains('modal-backdrop')) {
+                            closeQR();
+                        }
+                    };
 
-                // PWA Installation
-                let deferredPrompt;
-                const installButton = ref(false);
-                const isMobile = ref(false);
-                const isPWAInstalled = ref(false);
+                    // PWA Installation
+                    let deferredPrompt;
+                    const installButton = ref(false);
+                    const isMobile = ref(false);
+                    const isPWAInstalled = ref(false);
 
-                const installPWA = () => {
-                    if (deferredPrompt) {
-                        // Mostrar el prompt de instalación
-                        deferredPrompt.prompt();
+                    const installPWA = () => {
+                        if (deferredPrompt) {
+                            // Mostrar el prompt de instalación
+                            deferredPrompt.prompt();
 
-                        // Esperar la respuesta del usuario
-                        deferredPrompt.userChoice.then((choiceResult) => {
-                            if (choiceResult.outcome === 'accepted') {
+                            // Esperar la respuesta del usuario
+                            deferredPrompt.userChoice.then((choiceResult) => {
+                                if (choiceResult.outcome === 'accepted') {
+                                    isPWAInstalled.value = true;
+                                    installButton.value = false;
+                                }
+
+                                // Limpiar el prompt
+                                deferredPrompt = null;
+                            }).catch((error) => {
+                                console.error('Error durante la instalación:', error);
+                                deferredPrompt = null;
+                            });
+                        } else {
+                            // Verificar si ya está instalada
+                            if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+                                isPWAInstalled.value = true;
+                            } else {
+                                // Mostrar instrucciones alternativas
+                                alert('Para instalar la aplicación:\n\nEn Chrome/Edge: Busca el botón de instalación en la barra de direcciones\nEn Firefox: Busca el botón de instalación en la barra de direcciones\nEn Safari: Usa "Compartir" > "Añadir a pantalla de inicio"');
+                            }
+                        }
+                    };
+
+
+
+                    // Lifecycle
+                    onMounted(() => {
+                        loadDepartamentos();
+                        loadPersonal();
+
+                        // Detectar si es móvil
+                        const checkMobile = () => {
+                            isMobile.value = window.innerWidth <= 768;
+                        };
+                        checkMobile();
+                        window.addEventListener('resize', checkMobile);
+
+                        // Registrar Service Worker para PWA
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.register('./sw.js')
+                                .then((registration) => {
+                                    console.log('Service Worker registrado correctamente');
+                                })
+                                .catch((error) => {
+                                    console.error('Error registrando Service Worker:', error);
+                                });
+                        }
+
+                        // Escuchar evento de instalación de PWA
+                        window.addEventListener('beforeinstallprompt', (e) => {
+                            // Prevenir el banner automático de instalación
+                            e.preventDefault();
+                            deferredPrompt = e;
+
+                            // Mostrar el botón apropiado según el dispositivo
+                            if (!isMobile.value) {
+                                installButton.value = true;
+                            }
+                        });
+
+                        // Escuchar cuando la PWA se instala
+                        window.addEventListener('appinstalled', (e) => {
+                            isPWAInstalled.value = true;
+                            installButton.value = false;
+                            deferredPrompt = null;
+                        });
+
+
+
+                        // Verificar si la PWA ya está instalada
+                        const checkPWAInstalled = () => {
+                            const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+                            const isInApp = window.navigator.standalone === true; // iOS
+
+                            if (isStandalone || isInApp) {
                                 isPWAInstalled.value = true;
                                 installButton.value = false;
                             }
+                        };
 
-                            // Limpiar el prompt
-                            deferredPrompt = null;
-                        }).catch((error) => {
-                            console.error('Error durante la instalación:', error);
-                            deferredPrompt = null;
-                        });
-                    } else {
-                        // Verificar si ya está instalada
-                        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-                            isPWAInstalled.value = true;
-                        } else {
-                            // Mostrar instrucciones alternativas
-                            alert('Para instalar la aplicación:\n\nEn Chrome/Edge: Busca el botón de instalación en la barra de direcciones\nEn Firefox: Busca el botón de instalación en la barra de direcciones\nEn Safari: Usa "Compartir" > "Añadir a pantalla de inicio"');
-                        }
-                    }
-                };
+                        checkPWAInstalled();
 
-
-
-                // Lifecycle
-                onMounted(() => {
-                    loadDepartamentos();
-                    loadPersonal();
-
-                    // Detectar si es móvil
-                    const checkMobile = () => {
-                        isMobile.value = window.innerWidth <= 768;
-                    };
-                    checkMobile();
-                    window.addEventListener('resize', checkMobile);
-
-                    // Registrar Service Worker para PWA
-                    if ('serviceWorker' in navigator) {
-                        navigator.serviceWorker.register('./sw.js')
-                            .then((registration) => {
-                                console.log('Service Worker registrado correctamente');
-                            })
-                            .catch((error) => {
-                                console.error('Error registrando Service Worker:', error);
-                            });
-                    }
-
-                    // Escuchar evento de instalación de PWA
-                    window.addEventListener('beforeinstallprompt', (e) => {
-                        // Prevenir el banner automático de instalación
-                        e.preventDefault();
-                        deferredPrompt = e;
-
-                        // Mostrar el botón apropiado según el dispositivo
-                        if (!isMobile.value) {
-                            installButton.value = true;
+                        // Verificar cambios en el modo de visualización
+                        if (window.matchMedia) {
+                            const mediaQuery = window.matchMedia('(display-mode: standalone)');
+                            mediaQuery.addEventListener('change', checkPWAInstalled);
                         }
                     });
 
-                    // Escuchar cuando la PWA se instala
-                    window.addEventListener('appinstalled', (e) => {
-                        isPWAInstalled.value = true;
-                        installButton.value = false;
-                        deferredPrompt = null;
-                    });
-
-
-
-                    // Verificar si la PWA ya está instalada
-                    const checkPWAInstalled = () => {
-                        const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
-                        const isInApp = window.navigator.standalone === true; // iOS
-
-                        if (isStandalone || isInApp) {
-                            isPWAInstalled.value = true;
-                            installButton.value = false;
-                        }
+                    return {
+                        activeTab,
+                        personal,
+                        departamentos,
+                        loading,
+                        error,
+                        searchQuery,
+                        selectedDepartment,
+                        viewMode,
+                        showQR,
+                        tabs,
+                        uniqueDepartments,
+                        filteredPersonal,
+                        loadPersonal,
+                        loadDepartamentos,
+                        highlightSearch,
+                        hasValidContactValue,
+                        formatContactValue,
+                        handleImageError,
+                        generateQR,
+                        closeQR,
+                        handleOutsideClick,
+                        installPWA,
+                        installButton,
+                        isMobile,
+                        isPWAInstalled
                     };
+                }
+            }).mount('#app');
+        }
 
-                    checkPWAInstalled();
-
-                    // Verificar cambios en el modo de visualización
-                    if (window.matchMedia) {
-                        const mediaQuery = window.matchMedia('(display-mode: standalone)');
-                        mediaQuery.addEventListener('change', checkPWAInstalled);
-                    }
-                });
-
-                return {
-                    activeTab,
-                    personal,
-                    departamentos,
-                    loading,
-                    error,
-                    searchQuery,
-                    selectedDepartment,
-                    viewMode,
-                    showQR,
-                    tabs,
-                    uniqueDepartments,
-                    filteredPersonal,
-                    loadPersonal,
-                    loadDepartamentos,
-                    highlightSearch,
-                    hasValidContactValue,
-                    formatContactValue,
-                    handleImageError,
-                    generateQR,
-                    closeQR,
-                    handleOutsideClick,
-                    installPWA,
-                    installButton,
-                    isMobile,
-                    isPWAInstalled
-                };
-            }
-        }).mount('#app');
+        // Inicializar cuando el DOM esté listo y Vue esté cargado
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            // El DOM ya está listo
+            initApp();
+        }
     </script>
 </body>
 

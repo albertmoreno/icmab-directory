@@ -40,6 +40,17 @@ self.addEventListener('activate', (event) => {
 
 // Interceptar peticiones
 self.addEventListener('fetch', (event) => {
+  // Filtrar peticiones que no pueden ser cacheadas (chrome-extension, chrome:, etc.)
+  const url = new URL(event.request.url);
+  if (url.protocol === 'chrome-extension:' || 
+      url.protocol === 'chrome:' || 
+      url.protocol === 'moz-extension:' ||
+      url.protocol === 'edge:' ||
+      url.protocol === 'opera:') {
+    // Dejar que estas peticiones pasen sin intervención del Service Worker
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -56,12 +67,26 @@ self.addEventListener('fetch', (event) => {
               return response;
             }
 
+            // Verificar que la URL no sea de extensiones antes de cachear
+            const responseUrl = new URL(response.url);
+            if (responseUrl.protocol === 'chrome-extension:' || 
+                responseUrl.protocol === 'chrome:' || 
+                responseUrl.protocol === 'moz-extension:' ||
+                responseUrl.protocol === 'edge:' ||
+                responseUrl.protocol === 'opera:') {
+              return response;
+            }
+
             // Clonar la respuesta para cachearla
             const responseToCache = response.clone();
 
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
+              })
+              .catch((error) => {
+                // Ignorar errores al cachear (puede fallar en algunos casos)
+                console.warn('Error al cachear:', error);
               });
 
             return response;
