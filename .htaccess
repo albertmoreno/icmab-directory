@@ -1,0 +1,11 @@
+# Caché: revalidar como máximo cada 24 horas
+<IfModule mod_headers.c>
+    # HTML e index: cache corto, revalidar con frecuencia
+    <FilesMatch "\.(html|htm|php)$">
+        Header set Cache-Control "max-age=0, must-revalidate"
+    </FilesMatch>
+    # CSS/JS propios: cache 24h
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "max-age=86400, must-revalidate"
+    </FilesMatch>
+</IfModule>

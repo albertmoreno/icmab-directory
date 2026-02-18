@@ -14,6 +14,9 @@
     <meta name="apple-mobile-web-app-title" content="ICMAB Directori">
     <meta name="mobile-web-app-capable" content="yes">
 
+    <!-- Caché máxima 24h (86400 segundos), luego revalidar -->
+    <meta http-equiv="Cache-Control" content="max-age=86400, must-revalidate">
+
     <!-- PWA Icons -->
     <link rel="icon" href="https://media.icmab.es/logos/icmab/faviconblue.png" sizes="any">
     <link rel="icon" type="image/svg+xml" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
@@ -755,11 +758,26 @@
                         checkMobile();
                         window.addEventListener('resize', checkMobile);
 
-                        // Registrar Service Worker para PWA
+                        // Registrar Service Worker para PWA (updateViaCache: 'none' = siempre comprobar actualizaciones)
                         if ('serviceWorker' in navigator) {
-                            navigator.serviceWorker.register('./sw.js')
+                            navigator.serviceWorker.register('./sw.js?v=5', { updateViaCache: 'none' })
                                 .then((registration) => {
                                     console.log('Service Worker registrado correctamente');
+                                    // Comprobar actualizaciones cada 24h o al recuperar foco
+                                    const checkUpdate = () => registration.update();
+                                    setInterval(checkUpdate, 24 * 60 * 60 * 1000);
+                                    document.addEventListener('visibilitychange', () => {
+                                        if (document.visibilityState === 'visible') checkUpdate();
+                                    });
+                                    // Si hay nuevo SW, recargar para aplicar cambios
+                                    registration.addEventListener('updatefound', () => {
+                                        const newWorker = registration.installing;
+                                        newWorker.addEventListener('statechange', () => {
+                                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                                window.location.reload();
+                                            }
+                                        });
+                                    });
                                 })
                                 .catch((error) => {
                                     console.error('Error registrando Service Worker:', error);
