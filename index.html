@@ -6,13 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal de Información - ICMAB</title>
 
-    <!-- PWA Meta Tags -->
     <meta name="description" content="Directori del personal de l'Institut de Ciència de Materials de Barcelona">
-    <meta name="theme-color" content="#0345bf">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="ICMAB Directori">
-    <meta name="mobile-web-app-capable" content="yes">
 
     <!-- Caché máxima 24h (86400 segundos), luego revalidar -->
     <meta http-equiv="Cache-Control" content="max-age=86400, must-revalidate">
@@ -22,8 +16,6 @@
     <link rel="icon" type="image/svg+xml" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
     <link rel="apple-touch-icon" href="https://media.icmab.es/logos/icmab/faviconblue.svg">
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -32,8 +24,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <!-- Vue.js 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- QR Code Generator -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -419,52 +409,6 @@
             </div>
         </main>
 
-        <!-- Botón QR flotante -->
-        <div class="qr-section">
-            <button class="qr-button" @click="showQR = true" title="Mostrar código QR">
-                <i class="bi bi-qr-code"></i>
-            </button>
-        </div>
-
-        <!-- Botón de instalación PWA móvil (debajo del QR) -->
-        <button v-if="isMobile && !isPWAInstalled" class="mobile-pwa-button" @click="installPWA"
-            title="Instalar com a aplicació">
-            <i class="bi bi-download"></i>Instal·lar aplicació
-        </button>
-
-
-
-        <!-- Botón de instalación PWA desktop (discreto) -->
-        <div class="pwa-install-section" v-if="installButton && !isMobile"
-            style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
-            <button class="btn" @click="installPWA" title="Instal·lar com a aplicació">
-                <i class="bi bi-download"></i>
-            </button>
-        </div>
-
-
-
-        <!-- Modal QR -->
-        <div class="modal fade" :class="{ show: showQR }" :style="{ display: showQR ? 'block' : 'none' }" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content qr-modal">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Codi QR del Portal</h5>
-                        <button type="button" class="btn-close" @click="closeQR"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="qr-code-container">
-                            <div id="qr-code"></div>
-                            <p class="mt-3 text-muted">
-                                Escaneï aquest codi per accedir al portal des de el teu mòbil
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Backdrop del modal -->
-        <div v-if="showQR" class="modal-backdrop fade show"></div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -479,7 +423,7 @@
                 return;
             }
 
-            const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+            const { createApp, ref, computed, onMounted, watch } = Vue;
 
             createApp({
                 setup() {
@@ -492,7 +436,6 @@
                     const searchQuery = ref('');
                     const selectedDepartment = ref('');
                     const viewMode = ref('grid');
-                    const showQR = ref(false);
 
                     // Configuración de pestañas
                     const tabs = ref([
@@ -630,53 +573,6 @@
                         }
                     };
 
-                    const generateQR = () => {
-                        if (showQR.value) {
-                            // Usar la URL actual donde está instalado el código
-                            const currentUrl = window.location.href;
-                            const qrContainer = document.getElementById('qr-code');
-
-                            console.log('Generando QR para:', currentUrl);
-                            console.log('QR container encontrado:', qrContainer);
-
-                            if (qrContainer) {
-                                // Limpiar el contenedor antes de generar
-                                qrContainer.innerHTML = '';
-
-                                // Verificar que QRCode esté disponible
-                                if (typeof QRCode !== 'undefined') {
-                                    console.log('QRCode library disponible, generando...');
-
-                                    try {
-                                        // Crear un nuevo QRCode instance
-                                        const qr = new QRCode(qrContainer, {
-                                            text: currentUrl,
-                                            width: 200,
-                                            height: 200,
-                                            colorDark: '#0345bf',
-                                            colorLight: '#ffffff',
-                                            correctLevel: QRCode.CorrectLevel.H
-                                        });
-
-                                        console.log('QR generado exitosamente');
-                                    } catch (error) {
-                                        console.error('Error generando QR:', error);
-                                        qrContainer.innerHTML = '<div style="color: #dc3545; text-align: center; padding: 20px;">Error generando QR</div>';
-                                    }
-                                } else {
-                                    console.error('QRCode library no está disponible');
-                                    qrContainer.innerHTML = '<div style="color: #dc3545; text-align: center; padding: 20px;">QRCode no disponible</div>';
-                                }
-                            } else {
-                                console.error('QR container no encontrado');
-                            }
-                        }
-                    };
-
-                    const closeQR = () => {
-                        showQR.value = false;
-                    };
-
                     // Watchers
                     watch(searchQuery, () => {
                         // No hacer nada aquí, el filtrado se hace en el computed
@@ -686,143 +582,11 @@
                         // No hacer nada aquí, el filtrado se hace en el computed
                     });
 
-                    watch(showQR, async (newVal) => {
-                        if (newVal) {
-                            console.log('Modal QR abierto, generando...');
-                            // Esperar a que el DOM se actualice
-                            await nextTick();
-                            // Esperar un poco más para asegurar que el modal esté visible
-                            setTimeout(() => {
-                                console.log('Intentando generar QR...');
-                                generateQR();
-                            }, 300);
-                            // Cerrar modal al hacer clic fuera
-                            document.addEventListener('click', handleOutsideClick);
-                        } else {
-                            document.removeEventListener('click', handleOutsideClick);
-                        }
-                    });
-
-                    const handleOutsideClick = (event) => {
-                        if (event.target.classList.contains('modal-backdrop')) {
-                            closeQR();
-                        }
-                    };
-
-                    // PWA Installation
-                    let deferredPrompt;
-                    const installButton = ref(false);
-                    const isMobile = ref(false);
-                    const isPWAInstalled = ref(false);
-
-                    const installPWA = () => {
-                        if (deferredPrompt) {
-                            // Mostrar el prompt de instalación
-                            deferredPrompt.prompt();
-
-                            // Esperar la respuesta del usuario
-                            deferredPrompt.userChoice.then((choiceResult) => {
-                                if (choiceResult.outcome === 'accepted') {
-                                    isPWAInstalled.value = true;
-                                    installButton.value = false;
-                                }
-
-                                // Limpiar el prompt
-                                deferredPrompt = null;
-                            }).catch((error) => {
-                                console.error('Error durante la instalación:', error);
-                                deferredPrompt = null;
-                            });
-                        } else {
-                            // Verificar si ya está instalada
-                            if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-                                isPWAInstalled.value = true;
-                            } else {
-                                // Mostrar instrucciones alternativas
-                                alert('Para instalar la aplicación:\n\nEn Chrome/Edge: Busca el botón de instalación en la barra de direcciones\nEn Firefox: Busca el botón de instalación en la barra de direcciones\nEn Safari: Usa "Compartir" > "Añadir a pantalla de inicio"');
-                            }
-                        }
-                    };
-
-
-
                     // Lifecycle
                     onMounted(() => {
                         loadDepartamentos();
                         loadPersonal();
 
-                        // Detectar si es móvil
-                        const checkMobile = () => {
-                            isMobile.value = window.innerWidth <= 768;
-                        };
-                        checkMobile();
-                        window.addEventListener('resize', checkMobile);
-
-                        // Registrar Service Worker para PWA (updateViaCache: 'none' = siempre comprobar actualizaciones)
-                        if ('serviceWorker' in navigator) {
-                            navigator.serviceWorker.register('./sw.js?v=5', { updateViaCache: 'none' })
-                                .then((registration) => {
-                                    console.log('Service Worker registrado correctamente');
-                                    // Comprobar actualizaciones cada 24h o al recuperar foco
-                                    const checkUpdate = () => registration.update();
-                                    setInterval(checkUpdate, 24 * 60 * 60 * 1000);
-                                    document.addEventListener('visibilitychange', () => {
-                                        if (document.visibilityState === 'visible') checkUpdate();
-                                    });
-                                    // Si hay nuevo SW, recargar para aplicar cambios
-                                    registration.addEventListener('updatefound', () => {
-                                        const newWorker = registration.installing;
-                                        newWorker.addEventListener('statechange', () => {
-                                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                                window.location.reload();
-                                            }
-                                        });
-                                    });
-                                })
-                                .catch((error) => {
-                                    console.error('Error registrando Service Worker:', error);
-                                });
-                        }
-
-                        // Escuchar evento de instalación de PWA
-                        window.addEventListener('beforeinstallprompt', (e) => {
-                            // Prevenir el banner automático de instalación
-                            e.preventDefault();
-                            deferredPrompt = e;
-
-                            // Mostrar el botón apropiado según el dispositivo
-                            if (!isMobile.value) {
-                                installButton.value = true;
-                            }
-                        });
-
-                        // Escuchar cuando la PWA se instala
-                        window.addEventListener('appinstalled', (e) => {
-                            isPWAInstalled.value = true;
-                            installButton.value = false;
-                            deferredPrompt = null;
-                        });
-
-
-
-                        // Verificar si la PWA ya está instalada
-                        const checkPWAInstalled = () => {
-                            const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
-                            const isInApp = window.navigator.standalone === true; // iOS
-
-                            if (isStandalone || isInApp) {
-                                isPWAInstalled.value = true;
-                                installButton.value = false;
-                            }
-                        };
-
-                        checkPWAInstalled();
-
-                        // Verificar cambios en el modo de visualización
-                        if (window.matchMedia) {
-                            const mediaQuery = window.matchMedia('(display-mode: standalone)');
-                            mediaQuery.addEventListener('change', checkPWAInstalled);
-                        }
                     });
 
                     return {
@@ -834,7 +598,6 @@
                         searchQuery,
                         selectedDepartment,
                         viewMode,
-                        showQR,
                         tabs,
                         uniqueDepartments,
                         filteredPersonal,
@@ -843,14 +606,7 @@
                         highlightSearch,
                         hasValidContactValue,
                         formatContactValue,
-                        handleImageError,
-                        generateQR,
-                        closeQR,
-                        handleOutsideClick,
-                        installPWA,
-                        installButton,
-                        isMobile,
-                        isPWAInstalled
+                        handleImageError
                     };
                 }
             }).mount('#app');
