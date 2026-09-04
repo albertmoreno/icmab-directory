@@ -89,7 +89,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                                         <input type="text" class="form-control" v-model="searchQuery"
-                                            placeholder="Buscar per nom, cognom, cognom2, email o usuari...">
+                                            placeholder="Buscar per nom, cognom, categoria, email o usuari...">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -145,6 +145,9 @@
                                                     <span
                                                         v-html="highlightSearch(person.cognom + ' ' + (person.cognom2 || '') + ', ' + person.nom)"></span>
                                                 </h5>
+                                                <div v-if="person.categoria_laboral" class="category-name">
+                                                    {{ person.categoria_laboral }}
+                                                </div>
                                                 <div v-if="person.department_name" class="department-name">
                                                     {{ person.department_name }}
                                                 </div>
@@ -206,6 +209,9 @@
                                                 <span
                                                     v-html="highlightSearch(person.cognom + ' ' + (person.cognom2 || '') + ', ' + person.nom)"></span>
                                             </h6>
+                                            <small v-if="person.categoria_laboral" class="category-name d-block">
+                                                {{ person.categoria_laboral }}
+                                            </small>
                                             <small v-if="person.department_name" class="text-muted">
                                                 {{ person.department_name }}
                                             </small>
@@ -406,6 +412,69 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Pestaña Units i Groups -->
+                <div v-if="enableUnitsGroupsTab" class="tab-pane fade"
+                    :class="{ 'show active': activeTab === 'units-groups' }" role="tabpanel">
+                    <div class="mt-4 units-groups-panel">
+                        <div class="units-hero">
+                            <div>
+                                <h2 class="units-title"><i class="bi bi-diagram-3"></i> Units i Groups</h2>
+                                <p class="units-subtitle mb-0">
+                                    Estructura de recerca de l'ICMAB amb les unitats i els grups associats.
+                                </p>
+                            </div>
+                            <a class="units-hero-link" href="https://www.icmab.es/research/research-units"
+                                target="_blank" rel="noopener">
+                                Veure totes les units <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            </a>
+                        </div>
+
+                        <div class="units-stats">
+                            <div class="units-stat-card">
+                                <span class="units-stat-value">{{ researchUnits.length }}</span>
+                                <span class="units-stat-label">Research Units</span>
+                            </div>
+                            <div class="units-stat-card">
+                                <span class="units-stat-value">{{ totalResearchGroups }}</span>
+                                <span class="units-stat-label">Research Groups</span>
+                            </div>
+                        </div>
+
+                        <div class="accordion units-accordion" id="research-units-accordion">
+                            <div class="accordion-item unit-accordion-item" v-for="(unit, index) in researchUnits"
+                                :key="unit.name">
+                                <h2 class="accordion-header" :id="`unit-heading-${index}`">
+                                    <button class="accordion-button unit-accordion-button"
+                                        :class="{ collapsed: index !== 0 }" type="button" data-bs-toggle="collapse"
+                                        :data-bs-target="`#unit-collapse-${index}`"
+                                        :aria-expanded="index === 0 ? 'true' : 'false'"
+                                        :aria-controls="`unit-collapse-${index}`">
+                                        <a class="unit-title-link" :href="toResearchUrl(unit.url)" target="_blank"
+                                            rel="noopener" @click.stop>
+                                            {{ unit.name }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                        </a>
+                                        <span class="unit-count-badge">{{ unit.groups.length }} {{
+                                            unit.groups.length === 1 ? 'group' : 'groups' }}</span>
+                                    </button>
+                                </h2>
+                                <div :id="`unit-collapse-${index}`" class="accordion-collapse collapse"
+                                    :class="{ show: index === 0 }" :aria-labelledby="`unit-heading-${index}`"
+                                    data-bs-parent="#research-units-accordion">
+                                    <div class="accordion-body unit-accordion-body">
+                                        <ul class="unit-groups-list mt-3">
+                                            <li class="unit-group-item" v-for="group in unit.groups"
+                                                :key="`${unit.name}-${group.name}`">
+                                                <a class="unit-group-link" :href="toResearchUrl(group.url)"
+                                                    target="_blank" rel="noopener">{{ group.name }}</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -429,6 +498,7 @@
                 setup() {
                     // Estado reactivo
                     const activeTab = ref('directorio');
+                    const enableUnitsGroupsTab = ref(false);
                     const personal = ref([]);
                     const departamentos = ref([]);
                     const loading = ref(false);
@@ -438,10 +508,18 @@
                     const viewMode = ref('grid');
 
                     // Configuración de pestañas
-                    const tabs = ref([
-                        { id: 'directorio', title: 'Directori de personal', icon: 'bi bi-people' },
-                        { id: 'emergencia', title: 'Enllaços i contactes', icon: 'bi bi-telephone' }
-                    ]);
+                    const tabs = computed(() => {
+                        const baseTabs = [
+                            { id: 'directorio', title: 'Directori de personal', icon: 'bi bi-people' },
+                            { id: 'emergencia', title: 'Enllaços i contactes', icon: 'bi bi-telephone' }
+                        ];
+
+                        if (enableUnitsGroupsTab.value) {
+                            baseTabs.push({ id: 'units-groups', title: 'Units i Groups', icon: 'bi bi-diagram-3' });
+                        }
+
+                        return baseTabs;
+                    });
 
                     // Computed properties
                     const uniqueDepartments = computed(() => {
@@ -470,12 +548,99 @@
                                 const nomMatch = p.nom && typeof p.nom === 'string' && p.nom.toLowerCase().includes(query);
                                 const usernameMatch = p.username && typeof p.username === 'string' && p.username.toLowerCase().includes(query);
                                 const emailMatch = p.email && typeof p.email === 'string' && p.email.toLowerCase().includes(query);
+                                const categoriaMatch = p.categoria_laboral && typeof p.categoria_laboral === 'string' && p.categoria_laboral.toLowerCase().includes(query);
 
-                                return cognomMatch || cognom2Match || nomMatch || usernameMatch || emailMatch;
+                                return cognomMatch || cognom2Match || nomMatch || usernameMatch || emailMatch || categoriaMatch;
                             });
                         }
 
                         return filtered;
+                    });
+
+                    const researchUnits = ref([
+                        {
+                            name: 'Magnetic Materials and Functional Oxides',
+                            url: '/research/research-units/magnetic-materials-and-functional-oxides',
+                            groups: [
+                                { name: 'Advanced Characterization and Nanostructured Materials (ACNM)', url: '/research/research-groups/advanced-characterization-and-nanostructured-materials-acnm' },
+                                { name: 'Ferroelectric oxide films for energy and memory devices (FOXEM)', url: '/research/research-groups/ferroelectric-oxide-films-for-energy-and-memory-devices-foxem' },
+                                { name: 'Multifunctional Thin Films and Complex Structures (MULFOX)', url: '/research/research-groups/multifunctional-thin-films-and-complex-structures-mulfox' }
+                            ]
+                        },
+                        {
+                            name: 'Advanced Structural and Functional Crystallography',
+                            url: '/research/research-units/advanced-structural-and-functional-crystallography',
+                            groups: [
+                                { name: 'Crystallography and X-Ray Diffraction', url: '/research/research-groups/crystallography-and-x-ray-diffraction' },
+                                { name: 'Crystallography of Magnetic and Electronic Oxides and Surfaces (CMEOS)', url: '/research/research-groups/crystallography-of-magnetic-and-electronic-oxides-and-surfaces-cmeos' }
+                            ]
+                        },
+                        {
+                            name: 'Smart Molecular Inorganic and Hybrid Materials',
+                            url: '/research/research-units/smart-molecular-inorganic-and-hybrid-materials',
+                            groups: [
+                                { name: 'Dynamic Biomimetics for Cancer Immunotherapy', url: '/research/research-groups/dynamic-biomimetics-for-cancer-immunotherapy' },
+                                { name: 'Inorganic Materials & Catalysis (LMI)', url: '/research/research-groups/inorganic-materials-catalysis-lmi' },
+                                { name: 'Nanoparticles & Nanocomposites (NN)', url: '/research/research-groups/nanoparticles-nanocomposites-nn' },
+                                { name: 'Sustainable Molecular Systems (SUSMOSYS)', url: '/research/research-groups/sustainable-molecular-systems-susmosys' }
+                            ]
+                        },
+                        {
+                            name: 'Solid State Chemistry',
+                            url: '/research/research-units/solid-state-chemistry',
+                            groups: [
+                                { name: 'Electrochemistry and Electroactive Materials', url: '/research/research-groups/electrochemistry-and-electroactive-materials' },
+                                { name: 'Inorganic materials and electrolytes for battery applications', url: '/research/research-groups/inorganic-materials-and-electrolytes-for-battery-applications' },
+                                { name: 'Nanoengineering of carbon and inorganic materials (NanoCIM)', url: '/research/research-groups/nanoengineering-of-carbon-and-inorganic-materials-nanocim' },
+                                { name: 'Nanostructured interfaces for electrochemical energy storage', url: '/research/research-groups/nanostructured-interfaces-for-electrochemical-energy-storage' },
+                                { name: 'Nitride-based materials', url: '/research/research-groups/nitride-based-materials' },
+                                { name: 'Supercritical Fluids and Functional Materials', url: '/research/research-groups/supercritical-fluids-and-functional-materials' }
+                            ]
+                        },
+                        {
+                            name: 'Materials Simulation & Theory',
+                            url: '/research/research-units/materials-simulation-theory',
+                            groups: [
+                                { name: 'Electronic Structure of Materials (LEEM)', url: '/research/research-groups/electronic-structure-of-materials-leem' },
+                                { name: 'Soft Matter Theory (SOFTMATTERTHEORY)', url: '/research/research-groups/soft-matter-theory-softmattertheory' }
+                            ]
+                        },
+                        {
+                            name: 'Functional Surfaces and Interfaces',
+                            url: '/research/research-units/functional-surfaces-and-interfaces',
+                            groups: [
+                                { name: 'Functional Nanomaterials & Surfaces (FunNanoSurf)', url: '/research/research-groups/functional-nanomaterials-surfaces-funnanosurf' },
+                                { name: 'Physical Chemistry of Surfaces and Interfaces (SURFACES)', url: '/research/research-groups/physical-chemistry-of-surfaces-and-interfaces-surfaces' }
+                            ]
+                        },
+                        {
+                            name: 'Superconducting Materials and Functional Nanoengineered Structures',
+                            url: '/research/research-units/superconducting-materials-and-functional-nanoengineered-structures',
+                            groups: [
+                                { name: 'Laser Group', url: '/research/research-groups/laser-group' },
+                                { name: 'Nanoengineered Superconductors and Quantum Materials (SuperQMat)', url: '/research/research-groups/nanoengineered-superconductors-and-quantum-materials-superqmat' },
+                                { name: 'Superconducting Materials (SUMAN)', url: '/research/research-groups/superconducting-materials-suman' }
+                            ]
+                        },
+                        {
+                            name: 'Molecular Nanoscience and Organic Materials',
+                            url: '/research/research-units/molecular-nanoscience-and-organic-materials',
+                            groups: [
+                                { name: 'Molecular Materials for Electronic Devices (eMolMat)', url: '/research/research-groups/molecular-materials-for-electronic-devices-emolmat' },
+                                { name: 'Nanostructured Molecular Materials for Biomedicine (NANOMOL-BIO)', url: '/research/research-groups/nanostructured-molecular-materials-for-biomedicine-nanomol-bio' }
+                            ]
+                        },
+                        {
+                            name: 'Nanostructured Materials for Optoelectronics and Energy Harvesting',
+                            url: '/research/research-units/nanostructured-materials-for-optoelectronics-and-energy-harvesting',
+                            groups: [
+                                { name: 'Nanostructured Materials for Optoelectronics and Energy Harvesting (NANOPTO)', url: '/research/research-groups/nanostructured-materials-for-optoelectronics-and-energy-harvesting-nanopto' }
+                            ]
+                        }
+                    ]);
+
+                    const totalResearchGroups = computed(() => {
+                        return researchUnits.value.reduce((total, unit) => total + unit.groups.length, 0);
                     });
 
                     // Métodos
@@ -535,6 +700,12 @@
                         return text.replace(regex, '<span class="search-highlight">$1</span>');
                     };
 
+                    const toResearchUrl = (path) => {
+                        if (!path) return '#';
+                        if (path.startsWith('http://') || path.startsWith('https://')) return path;
+                        return `https://www.icmab.es${path}`;
+                    };
+
                     const getInitials = (person) => {
                         let initials = '';
                         // Obtener primera letra del primer apellido
@@ -591,6 +762,7 @@
 
                     return {
                         activeTab,
+                        enableUnitsGroupsTab,
                         personal,
                         departamentos,
                         loading,
@@ -601,9 +773,12 @@
                         tabs,
                         uniqueDepartments,
                         filteredPersonal,
+                        researchUnits,
+                        totalResearchGroups,
                         loadPersonal,
                         loadDepartamentos,
                         highlightSearch,
+                        toResearchUrl,
                         hasValidContactValue,
                         formatContactValue,
                         handleImageError

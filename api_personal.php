@@ -32,15 +32,16 @@ try {
     $busqueda = isset($_GET['busqueda']) ? $_GET['busqueda'] : '';
     $departamento = isset($_GET['departamento']) ? $_GET['departamento'] : '';
 
-    // Construir la consulta SQL con JOIN para obtener el nombre del departamento y despacho
-    // El departamento y espai_id se obtienen de la última entrada en icmab_dades_laborals
+    // Construir la consulta SQL con JOIN para obtener departamento, categoría laboral y despacho
+    // El departamento/categoría se obtienen de la última entrada en icmab_dades_laborals
     // El despacho se obtiene de la tabla despatxos usando espai_id
     $sql = "SELECT p.id, p.cognom, p.cognom2, p.nom, p.username, p.email, p.telefon1, p.telefon2, p.bustia, 
                    dl.departament_id, d.departament as department_name,
+                   dl.categoria_id, c.acronim as categoria_laboral,
                    des.descripcio as despatx
             FROM icmab_personal p
             LEFT JOIN (
-                SELECT dl1.person_id, dl1.departament_id
+                SELECT dl1.person_id, dl1.departament_id, dl1.categoria_id
                 FROM icmab_dades_laborals dl1
                 INNER JOIN (
                     SELECT person_id, MAX(id) as max_id
@@ -49,6 +50,7 @@ try {
                 ) dl2 ON dl1.person_id = dl2.person_id AND dl1.id = dl2.max_id
             ) dl ON p.id = dl.person_id
             LEFT JOIN icmab_departments d ON dl.departament_id = d.id
+            LEFT JOIN icmab_categories c ON dl.categoria_id = c.id
             LEFT JOIN icmab_despatxos des ON p.espai_id = des.id
             WHERE p.status_id=1";
     $params = [];
